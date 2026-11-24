@@ -103,3 +103,26 @@
  .desktop-icons{grid-template-columns:repeat(3,minmax(0,1fr))}
  .desktop-icon b{font-size:9px}
 }
+
+
+/* Bureau interactif SEC-OS */
+.desktop{position:relative;overflow:hidden;user-select:none}
+.desktop-icons{z-index:2}
+.desktop-icon{cursor:default;user-select:none}
+.desktop-icon.selected{background:#4c9fbd55;border:1px solid #8ed8e6aa;box-shadow:inset 0 0 0 1px #d9faff22}
+.desktop-icon:active{background:#4c9fbd77}
+.icons-hidden{visibility:hidden}
+.desktop-context-menu{position:absolute;z-index:1000;min-width:205px;max-width:270px;padding:5px;background:rgba(8,22,34,.98);border:1px solid #4d8095;box-shadow:0 12px 35px #000b,0 0 0 1px #b8f2ff12;backdrop-filter:blur(16px);user-select:none}
+.desktop-context-menu button{display:block;width:100%;padding:9px 12px;text-align:left;border:1px solid transparent;background:transparent;color:#e1f2f7;font-size:12px;cursor:pointer}
+.desktop-context-menu button:hover:not(:disabled),.desktop-context-menu button:focus-visible{background:#1b5066;border-color:#4a879a;outline:0}
+.desktop-context-menu button:disabled{opacity:.4}
+.context-separator{height:1px;background:#315367;margin:5px 3px}
+.window-controls button[data-maximize]{font-size:14px;line-height:1}
+.window-titlebar{touch-action:pan-y}
+.task-app{cursor:pointer}
+@media(max-width:700px){
+ .desktop-context-menu{min-width:190px}
+ .window-space{inset:54px 8px 60px 8px}
+ .app-window{width:calc(100vw - 16px);height:calc(100vh - 120px);min-height:240px}
+ .desktop-icons{top:64px;left:5px;max-width:calc(100vw - 10px);max-height:calc(100vh - 130px)}
+}
