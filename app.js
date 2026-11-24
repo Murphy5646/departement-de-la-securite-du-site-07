@@ -184,6 +184,13 @@ function openWindow(key) {
     task.dataset.task = key;
     task.type = "button";
     task.textContent = titles[key] || key;
+    task.addEventListener("contextmenu", event => {
+      event.preventDefault();
+      showContextMenu(event.clientX,event.clientY,[
+        {label:"Afficher",action:()=>openWindow(key)},
+        {label:"Fermer",action:()=>closeWindow(key)}
+      ]);
+    });
     task.addEventListener("click", () => {
       if (win.classList.contains("open")) {
         win.classList.remove("open");
@@ -593,7 +600,7 @@ setComfort(readAppData(APP_KEYS.comfort, false) === true);
 comfortButton.addEventListener("click", () => setComfort(!document.body.classList.contains("comfort-mode")));
 $("apps-reset").addEventListener("click", () => {
   if (!window.confirm("Effacer les notes, tâches, rapports, échéances et messages enregistrés sur cet appareil ?")) return;
-  [APP_KEYS.notes,APP_KEYS.tasks,APP_KEYS.reports,APP_KEYS.events,APP_KEYS.mail].forEach(key => localStorage.removeItem(key));
+  [...Object.values(APP_KEYS),...Object.values(EXTRA_KEYS)].forEach(key => localStorage.removeItem(key));
   notesInput.value = ""; $("notes-status").textContent = "Notes effacées.";
   renderTasks(); renderReports(); renderEvents(); renderMail();
   $("settings-status").textContent = "Les données des applications ont été réinitialisées. Les comptes sont conservés.";
