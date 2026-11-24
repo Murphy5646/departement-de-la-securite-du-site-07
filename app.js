@@ -44,3 +44,25 @@ if(marshalSearch){
   $("marshal-count").textContent=q?visible+" ARTICLE(S) TROUVÉ(S)":"50 ARTICLES · 5 CHAPITRES";
  });
 }
+
+const marshalSearch=$("marshal-search");
+if(marshalSearch){
+ marshalSearch.addEventListener("input",()=>{
+  const q=marshalSearch.value.trim().toLocaleLowerCase("fr");
+  let visible=0;
+  document.querySelectorAll(".marshal-article").forEach(article=>{
+   const match=!q||article.textContent.toLocaleLowerCase("fr").includes(q);
+   article.hidden=!match;if(match)visible++;
+  });
+  document.querySelectorAll(".marshal-heading").forEach(heading=>{
+   let next=heading.nextElementSibling,has=false;
+   while(next&&!next.classList.contains("marshal-heading")){
+    if(next.classList.contains("marshal-article")&&!next.hidden)has=true;
+    if((next.classList.contains("marshal-subheading")||next.classList.contains("marshal-paragraph"))&&(!q||next.textContent.toLocaleLowerCase("fr").includes(q)))has=true;
+    next=next.nextElementSibling;
+   }
+   heading.hidden=!!q&&!has;
+  });
+  $("marshal-count").textContent=q?visible+" ARTICLE(S) TROUVÉ(S)":"165 ARTICLES";
+ });
+}
