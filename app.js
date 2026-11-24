@@ -216,7 +216,7 @@ document.querySelectorAll("[data-open]").forEach(button => {
     button.addEventListener("click", event => {
       document.querySelectorAll(".desktop-icon.selected").forEach(icon => icon.classList.remove("selected"));
       button.classList.add("selected");
-      
+      if (event.detail === 0 || event.pointerType === "touch") openWindow(button.dataset.open);
     });
     button.addEventListener("dblclick", () => openWindow(button.dataset.open));
   } else {
@@ -972,3 +972,31 @@ document.addEventListener("keydown",event=>{
  if(event.key==="F5"&&document.activeElement===document.body){event.preventDefault();applyDesktopLabels();}
  if(event.altKey&&event.key==="ArrowDown"){const win=document.querySelector(".app-window.open");if(win){event.preventDefault();win.classList.remove("open");}}
 });
+
+/* Outils système : recherche du lanceur et sauvegarde portable. */
+(function(){
+ const search=$("start-search"),menu=$("start-menu"),start=$("start-button");
+ if(search&&menu){
+  const buttons=[...menu.querySelectorAll("button[data-open]")];
+  const filter=()=>{const q=search.value.trim().toLocaleLowerCase("fr");buttons.forEach(b=>b.hidden=!b.textContent.toLocaleLowerCase("fr").includes(q));};
+  search.addEventListener("input",filter);
+  search.addEventListener("keydown",e=>{if(e.key==="Enter"){const b=buttons.find(x=>!x.hidden);if(b){e.preventDefault();openWindow(b.dataset.open);}}if(e.key==="Escape"){search.value="";filter();menu.classList.add("hidden");start.classList.remove("active");search.blur();}});
+  start.addEventListener("click",()=>{if(!menu.classList.contains("hidden")){search.value="";filter();}else setTimeout(()=>search.focus(),0);});
+  document.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){e.preventDefault();menu.classList.remove("hidden");start.classList.add("active");search.focus();}});
+ }
+ const exp=$("backup-export"),imp=$("backup-import-button"),file=$("backup-import-file"),status=$("settings-status");
+ const safe=k=>/^site07_(?!users_v1$|session_v1$)[a-z0-9_]+$/i.test(k);
+ if(exp)exp.addEventListener("click",()=>{
+  const data={};for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&safe(k)){try{data[k]=JSON.parse(localStorage.getItem(k));}catch{data[k]=localStorage.getItem(k);}}}
+  const payload={format:"SEC-OS-BACKUP",version:1,createdAt:new Date().toISOString(),data};
+  const url=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}));
+  const a=document.createElement("a");a.href=url;a.download="sec-os-backup-"+new Date().toISOString().slice(0,10)+".json";document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+  if(status)status.textContent="Sauvegarde exportée. Les comptes et mots de passe sont exclus.";});
+ if(imp&&file){imp.addEventListener("click",()=>file.click());file.addEventListener("change",()=>{const f=file.files&&file.files[0];if(!f)return;const reader=new FileReader();
+  reader.onload=()=>{try{const p=JSON.parse(String(reader.result||""));if(p.format!=="SEC-OS-BACKUP"||p.version!==1||!p.data||typeof p.data!=="object"||Array.isArray(p.data))throw Error("Fichier SEC-OS non reconnu.");
+   const entries=Object.entries(p.data);if(!entries.length||entries.some(([k])=>!safe(k)))throw Error("Données de sauvegarde non autorisées.");
+   if(!confirm("Importer "+entries.length+" élément(s) ? Les données portant le même nom seront remplacées. Les comptes restent inchangés."))return;
+   entries.forEach(([k,v])=>localStorage.setItem(k,typeof v==="string"?v:JSON.stringify(v)));if(status)status.textContent="Importation terminée. Rechargez SEC-OS pour actualiser les applications.";
+  }catch(err){if(status)status.textContent=err.message||"Importation impossible.";}finally{file.value="";}};
+  reader.onerror=()=>{if(status)status.textContent="Lecture du fichier impossible.";file.value="";};reader.readAsText(f);});}
+})();
