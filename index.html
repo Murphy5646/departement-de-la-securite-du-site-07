@@ -1,38 +1,22 @@
 <!doctype html>
-<html lang="fr">
-<head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#07111d"><title>Département de la sécurité — Site-07</title>
-<link rel="stylesheet" href="styles.css">
-</head>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#07111d"><title>Département de la sécurité — Site-07</title><link rel="stylesheet" href="styles.css"></head>
 <body>
-<div id="boot" class="boot"><div class="boot-mark">07</div><p class="mono">SITE-07 // INITIALISATION DU TERMINAL</p><div class="progress"><i></i></div><small id="bootline">Chargement des services...</small></div>
-<main id="login" class="login hidden">
-  <section class="login-panel">
-    <div class="brand"><div class="crest">07</div><div><p class="eyebrow">INSTALLATION SITE-07</p><h1>DÉPARTEMENT DE LA<br>SÉCURITÉ</h1><p class="sub">PORTAIL DU PERSONNEL · TERMINAL SEC-OS</p></div></div>
-    <div class="rule"></div>
-    <p class="section-label">AUTHENTIFICATION DU PERSONNEL</p>
-    <label for="username">IDENTIFIANT DE SERVICE</label><input id="username" autocomplete="off" placeholder="Ex. MAR-CMD-07">
-    <label for="accesscode">CODE D'ACCÈS</label><input id="accesscode" type="password" autocomplete="off" placeholder="Saisir le code de service">
-    <button id="loginbtn">ÉTABLIR LA CONNEXION <span>↗</span></button>
-    <p id="loginmsg" class="message" aria-live="polite">Environnement de démonstration — aucune donnée réelle requise.</p>
-    <details><summary>Comptes de démonstration</summary><div id="accounts" class="accounts"></div></details>
-  </section>
-  <footer>SEC-OS 1.0 <span>RÉSEAU INTERNE · SITE-07</span><span id="clock"></span></footer>
-</main>
-<div id="desktop" class="desktop hidden">
-<header class="topbar"><div class="mini-brand"><span class="mini-crest">07</span> DÉPARTEMENT DE LA SÉCURITÉ <small>/ SITE-07</small></div><div class="top-right"><span class="online-dot"></span> SESSION ACTIVE <span id="topclock"></span><button id="logout" class="logout">DÉCONNEXION</button></div></header>
-<div class="shell">
-<aside class="sidebar"><div class="usercard"><div class="avatar" id="avatar">S</div><div><b id="displayname">Personnel</b><small id="displayrole">Service</small></div></div><p class="nav-caption">POSTE DE TRAVAIL</p><button class="nav active" data-page="home">▦ &nbsp; Tableau de bord</button><button class="nav" data-page="protocols">▤ &nbsp; Protocoles Marshal</button><button class="nav" data-page="directory">▥ &nbsp; Annuaire des services</button><button class="nav" data-page="archives">▧ &nbsp; Archives & directives</button><div class="side-bottom"><span class="online-dot"></span> SYSTÈME OPÉRATIONNEL<small>SEC-OS / BUILD 1.0.24</small></div></aside>
-<section class="content">
-<div id="page-home" class="page"><div class="welcome"><div><p class="eyebrow">TERMINAL DU PERSONNEL · SITE-07</p><h2 id="welcome">Bienvenue.</h2><p>Accès aux informations et ressources de votre département.</p></div><div class="status-card"><span class="online-dot"></span><div><b>TOUS LES SERVICES</b><small>État nominal</small></div></div></div>
-<div class="stats"><article><small>INSTALLATION</small><strong>SITE-07</strong><span>Complexe sécurisé</span></article><article><small>VOTRE SERVICE</small><strong id="statrole">—</strong><span>Profil connecté</span></article><article><small>SESSION</small><strong>ACTIVE</strong><span>Connexion locale</span></article></div>
-<h3 class="section-title">ACCÈS RAPIDES</h3><div class="tiles"><button data-page="protocols"><b>01 / Protocoles</b><span>Consulter les procédures Marshal</span><i>↗</i></button><button data-page="directory"><b>02 / Services</b><span>Organisation et responsabilités</span><i>↗</i></button><button data-page="archives"><b>03 / Archives</b><span>Directives et notes de service</span><i>↗</i></button></div>
-<div class="notice"><b>NOTE DE SERVICE</b><p>Les informations de ce portail sont destinées à l'organisation communautaire du Site-07. Les accès sont simulés localement dans votre navigateur.</p></div></div>
-<div id="page-protocols" class="page hidden"><p class="eyebrow">DOCUMENTATION / MARSHAL</p><h2>Protocoles Marshal</h2><p class="muted">Référentiel des procédures et dispositions du service Marshal.</p><div class="notice"><b>CODE MARSHAL — VERSION 1.2</b><p>Le texte intégral des articles sera ajouté à partir du document source fourni par la direction. Cette rubrique est prête à recevoir les 165 articles.</p></div><div class="doc-row"><span>01</span><div><b>Code Marshal</b><small>Version 1.2 · Texte source à intégrer</small></div><em>EN ATTENTE</em></div></div>
+<div id="boot" class="boot"><div class="boot-mark">07</div><p class="mono">SITE-07 // INITIALISATION DU TERMINAL</p><div class="progress"><i></i></div><small>Chargement des services...</small></div>
+<main id="login" class="login hidden"><section class="login-panel">
+<div class="brand"><div class="crest">07</div><div><p class="eyebrow">INSTALLATION SITE-07</p><h1>DÉPARTEMENT DE LA<br>SÉCURITÉ</h1><p class="sub">PORTAIL DU PERSONNEL · TERMINAL SEC-OS</p></div></div><div class="rule"></div>
+<p class="section-label">AUTHENTIFICATION DU PERSONNEL</p>
+<div class="auth-tabs"><button id="tab-login" class="auth-tab active" type="button">CONNEXION</button><button id="tab-register" class="auth-tab" type="button">CRÉER UN COMPTE</button></div>
+<div id="login-form"><label for="login-user">IDENTIFIANT</label><input id="login-user" autocomplete="username" placeholder="Votre identifiant"><label for="login-pass">MOT DE PASSE</label><input id="login-pass" type="password" autocomplete="current-password" placeholder="Votre mot de passe"><button id="loginbtn" class="primary">OUVRIR LA SESSION <span>↗</span></button></div>
+<div id="register-form" class="hidden"><label for="new-name">NOM AFFICHÉ</label><input id="new-name" maxlength="40" autocomplete="name" placeholder="Nom et prénom ou pseudonyme"><label for="new-user">IDENTIFIANT</label><input id="new-user" maxlength="24" autocomplete="username" placeholder="Choisir un identifiant"><label for="new-service">SERVICE</label><select id="new-service"><option value="Direction de la sécurité">Direction de la sécurité</option><option value="Commandement Marshal">Commandement Marshal</option><option value="Opérations Marshal">Opérations Marshal</option><option value="Administration Marshal">Administration Marshal</option><option value="Formation Marshal">Formation Marshal</option><option value="Personnel du Site-07">Personnel du Site-07</option></select><label for="new-pass">MOT DE PASSE (8 CARACTÈRES MINIMUM)</label><input id="new-pass" type="password" minlength="8" autocomplete="new-password" placeholder="Créer un mot de passe"><label for="new-pass-confirm">CONFIRMER LE MOT DE PASSE</label><input id="new-pass-confirm" type="password" autocomplete="new-password" placeholder="Répéter le mot de passe"><button id="registerbtn" class="primary">CRÉER MON COMPTE <span>↗</span></button></div>
+<p id="loginmsg" class="message" aria-live="polite">Utilisez votre compte personnel pour accéder au terminal.</p>
+<p class="security-note">Comptes enregistrés uniquement dans ce navigateur. N'utilisez pas de mot de passe personnel ou réutilisé.</p>
+</section><footer>SEC-OS 1.1 <span>RÉSEAU DU SITE-07</span><span id="clock"></span></footer></main>
+<div id="desktop" class="desktop hidden"><header class="topbar"><div class="mini-brand"><span class="mini-crest">07</span> DÉPARTEMENT DE LA SÉCURITÉ <small>/ SITE-07</small></div><div class="top-right"><span class="online-dot"></span> SESSION ACTIVE <span id="topclock"></span><button id="logout" class="logout">DÉCONNEXION</button></div></header>
+<div class="shell"><aside class="sidebar"><div class="usercard"><div class="avatar" id="avatar">S</div><div><b id="displayname">Personnel</b><small id="displayrole">Service</small></div></div><p class="nav-caption">POSTE DE TRAVAIL</p><button class="nav active" data-page="home">▦ &nbsp; Tableau de bord</button><button class="nav" data-page="protocols">▤ &nbsp; Protocoles Marshal</button><button class="nav" data-page="directory">▥ &nbsp; Annuaire des services</button><button class="nav" data-page="archives">▧ &nbsp; Archives & directives</button><div class="side-bottom"><span class="online-dot"></span> SYSTÈME OPÉRATIONNEL<small>SEC-OS / BUILD 1.1</small></div></aside>
+<section class="content"><div id="page-home" class="page"><div class="welcome"><div><p class="eyebrow">TERMINAL DU PERSONNEL · SITE-07</p><h2 id="welcome">Bienvenue.</h2><p>Accès aux informations et ressources de votre département.</p></div><div class="status-card"><span class="online-dot"></span><div><b>ÉTAT DU TERMINAL</b><small>Opérationnel</small></div></div></div>
+<div class="stats"><article><small>INSTALLATION</small><strong>SITE-07</strong><span>Complexe sécurisé</span></article><article><small>VOTRE SERVICE</small><strong id="statrole">—</strong><span>Profil connecté</span></article><article><small>SESSION</small><strong>ACTIVE</strong><span>Conservée sur cet appareil</span></article></div>
+<h3 class="section-title">ACCÈS RAPIDES</h3><div class="tiles"><button data-page="protocols"><b>01 / Protocoles</b><span>Consulter les procédures Marshal</span><i>↗</i></button><button data-page="directory"><b>02 / Services</b><span>Organisation et responsabilités</span><i>↗</i></button><button data-page="archives"><b>03 / Archives</b><span>Directives et notes de service</span><i>↗</i></button></div><div class="notice"><b>NOTE DE SERVICE</b><p>Portail communautaire du Site-07. Les comptes de cette version sont locaux à votre navigateur.</p></div></div>
+<div id="page-protocols" class="page hidden"><p class="eyebrow">DOCUMENTATION / MARSHAL</p><h2>Protocoles Marshal</h2><p class="muted">Référentiel des procédures et dispositions du service Marshal.</p><div class="notice"><b>CODE MARSHAL — VERSION 1.2</b><p>Le document source complet doit être ajouté pour publier fidèlement ses articles. Aucun article n'est inventé.</p></div></div>
 <div id="page-directory" class="page hidden"><p class="eyebrow">ORGANISATION / PERSONNEL</p><h2>Annuaire des services</h2><div id="directory" class="directory"></div></div>
-<div id="page-archives" class="page hidden"><p class="eyebrow">DOCUMENTATION / ARCHIVES</p><h2>Archives & directives</h2><div class="notice"><b>REGISTRE DOCUMENTAIRE</b><p>Aucune directive supplémentaire n'a encore été publiée. Les nouveaux documents pourront être ajoutés à cette section.</p></div></div>
-</section></div><footer class="desk-footer">SITE-07 · DÉPARTEMENT DE LA SÉCURITÉ <span>SEC-OS // TERMINAL COMMUNAUTAIRE</span></footer>
-</div>
-<script src="app.js"></script>
-</body></html>
+<div id="page-archives" class="page hidden"><p class="eyebrow">DOCUMENTATION / ARCHIVES</p><h2>Archives & directives</h2><div class="notice"><b>REGISTRE DOCUMENTAIRE</b><p>Aucune directive supplémentaire n'a encore été publiée.</p></div></div></section></div><footer class="desk-footer">SITE-07 · DÉPARTEMENT DE LA SÉCURITÉ <span>SEC-OS // TERMINAL COMMUNAUTAIRE</span></footer></div>
+<script src="app.js"></script></body></html>
