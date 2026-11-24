@@ -82,3 +82,5 @@
  .calc-grid button{min-height:44px}
  .app-list-item>span,.app-list-item>b{min-width:100%}
 }
+
+.start-menu{max-height:calc(100vh - 85px);overflow-y:auto;scrollbar-width:thin}
