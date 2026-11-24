@@ -35,3 +35,9 @@ Le bureau comprend notamment les applications suivantes : bloc-notes avec sauveg
 SEC-OS comprend aussi : convertisseur d'unités, chronomètre, minuteur, calcul de dates, contacts locaux, planning d'équipes RP, suivi de maintenance, check-lists, quiz de formation, glossaire SCP, plan schématique fictif, demandes internes, réunions, journal de service, modèles de documents, compteur de texte, panneau d'annonces local, favoris textuels, mode concentration et statistiques locales.
 
 Ces outils sont des fonctions de confort pour le jeu de rôle. Les données créées sont conservées dans le stockage local du navigateur et ne sont pas synchronisées entre les appareils. Les cartes, équipes, contacts et procédures présentés ne constituent pas des informations réelles du site ni des consignes opérationnelles.
+
+
+## Bureau interactif
+Le bureau propose désormais une interaction de type système d'exploitation : clic simple pour sélectionner un raccourci, double-clic pour ouvrir une application, clic droit sur un raccourci pour ouvrir/renommer/voir ses propriétés, clic droit sur le fond pour actualiser/trier/masquer les icônes, menus contextuels sur les fenêtres et applications de la barre des tâches, agrandissement/restauration par le bouton carré ou double-clic sur la barre de titre, et raccourci Alt+F4 pour fermer la fenêtre active. Les noms personnalisés des raccourcis sont conservés dans le navigateur.
+
+Ces fonctions sont locales au navigateur. L'interface est inspirée d'un bureau informatique, sans prétendre remplacer un véritable système d'exploitation.
