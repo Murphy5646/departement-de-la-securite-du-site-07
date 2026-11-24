@@ -1,68 +1,330 @@
-const $=id=>document.getElementById(id);
-const USERS_KEY="site07_users_v1",SESSION_KEY="site07_session_v1";
-const services=["Direction de la sécurité","Commandement Marshal","Opérations Marshal","Administration Marshal","Formation Marshal","Personnel du Site-07"];
-const titles={home:"Poste de travail",protocols:"Protocoles Marshal",directory:"Annuaire des services",archives:"Archives & directives"};
-const readUsers=()=>{try{return JSON.parse(localStorage.getItem(USERS_KEY)||"[]")}catch{return[]}};
-const saveUsers=u=>localStorage.setItem(USERS_KEY,JSON.stringify(u));
-const clean=s=>s.trim().replace(/[<>]/g,"");
-async function hashPassword(password,salt){const data=new TextEncoder().encode(salt+password);const digest=await crypto.subtle.digest("SHA-256",data);return Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,"0")).join("")}
-function switchAuth(mode){const registering=mode==="register";$("login-form").classList.toggle("hidden",registering);$("register-form").classList.toggle("hidden",!registering);$("tab-login").classList.toggle("active",!registering);$("tab-register").classList.toggle("active",registering);$("loginmsg").textContent=registering?"Créez votre profil personnel pour le terminal.":"Saisissez les identifiants de votre compte."}
-$("tab-login").addEventListener("click",()=>switchAuth("login"));$("tab-register").addEventListener("click",()=>switchAuth("register"));
-function showLogin(){localStorage.removeItem(SESSION_KEY);$("desktop").classList.add("hidden");$("login").classList.remove("hidden");$("login-pass").value="";$("login-user").focus();switchAuth("login")}
-function showDesktop(user){$("login").classList.add("hidden");$("desktop").classList.remove("hidden");$("displayname").textContent=user.name;$("displayrole").textContent=user.service;$("avatar").textContent=(user.name[0]||"S").toUpperCase();$("welcome").textContent="Bienvenue, "+user.name+".";$("statrole").textContent=user.service;openWindow("home")}
-async function login(){const username=clean($("login-user").value).toLowerCase(),password=$("login-pass").value;const user=readUsers().find(u=>u.username===username);if(!user||await hashPassword(password,user.salt)!==user.passwordHash){$("loginmsg").textContent="Identifiant ou mot de passe incorrect.";return}localStorage.setItem(SESSION_KEY,user.username);showDesktop(user)}
-async function register(){const name=clean($("new-name").value),username=clean($("new-user").value).toLowerCase(),service=$("new-service").value,password=$("new-pass").value,confirm=$("new-pass-confirm").value;if(name.length<2||!/^[a-z0-9._-]{3,24}$/.test(username)){$("loginmsg").textContent="Vérifiez le nom et l'identifiant (3 à 24 caractères : lettres, chiffres, . _ -).";return}if(password.length<8){$("loginmsg").textContent="Le mot de passe doit contenir au moins 8 caractères.";return}if(password!==confirm){$("loginmsg").textContent="Les deux mots de passe ne correspondent pas.";return}const users=readUsers();if(users.some(u=>u.username===username)){$("loginmsg").textContent="Cet identifiant est déjà utilisé sur ce navigateur.";return}const salt=Array.from(crypto.getRandomValues(new Uint8Array(16)),b=>b.toString(16).padStart(2,"0")).join("");users.push({name,username,service,salt,passwordHash:await hashPassword(password,salt)});saveUsers(users);localStorage.setItem(SESSION_KEY,username);showDesktop(users[users.length-1])}
-$("loginbtn").addEventListener("click",login);$("registerbtn").addEventListener("click",register);$("login-pass").addEventListener("keydown",e=>{if(e.key==="Enter")login()});$("new-pass-confirm").addEventListener("keydown",e=>{if(e.key==="Enter")register()});$("logout").addEventListener("click",showLogin);
-const directory=$("directory");services.forEach(s=>{const a=document.createElement("article"),b=document.createElement("b"),small=document.createElement("small");b.textContent=s;small.textContent="Service du Département de la sécurité";a.append(b,small);directory.appendChild(a)});
-let z=10;
-function focusWindow(key){document.querySelectorAll(".app-window").forEach(w=>w.style.zIndex=String(++z));const win=$("window-"+key);win.style.zIndex=String(++z);document.querySelectorAll(".task-app").forEach(b=>b.classList.toggle("active",b.dataset.task===key))}
-function openWindow(key){const win=$("window-"+key);if(!win)return;win.classList.add("open");focusWindow(key);$("start-menu").classList.add("hidden");$("start-button").classList.remove("active");if(!$("task-"+key)){const b=document.createElement("button");b.id="task-"+key;b.className="task-app active";b.dataset.task=key;b.textContent=titles[key];b.addEventListener("click",()=>{if(win.classList.contains("open")){win.classList.remove("open");b.classList.remove("active")}else{win.classList.add("open");focusWindow(key)}});$("task-apps").appendChild(b)}}
-function closeWindow(key){$("window-"+key).classList.remove("open");const b=$("task-"+key);if(b)b.remove()}
-document.querySelectorAll("[data-open]").forEach(b=>b.addEventListener("click",()=>openWindow(b.dataset.open)));
-document.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",()=>closeWindow(b.dataset.close)));
-document.querySelectorAll("[data-min]").forEach(b=>b.addEventListener("click",()=>{const k=b.dataset.min;$("window-"+k).classList.remove("open");const t=$("task-"+k);if(t)t.classList.remove("active")}));
-$("start-button").addEventListener("click",()=>{$("start-menu").classList.toggle("hidden");$("start-button").classList.toggle("active",!$("start-menu").classList.contains("hidden"))});
-document.addEventListener("click",e=>{if(!e.target.closest("#start-menu")&&!e.target.closest("#start-button")){$("start-menu").classList.add("hidden");$("start-button").classList.remove("active")}});
-document.querySelectorAll(".window-titlebar").forEach(bar=>{let drag=null;bar.addEventListener("pointerdown",e=>{if(e.target.closest("button"))return;const win=$("window-"+bar.dataset.drag);if(win.classList.contains("maximized"))return;focusWindow(bar.dataset.drag);const r=win.getBoundingClientRect();drag={x:e.clientX-r.left,y:e.clientY-r.top};bar.setPointerCapture(e.pointerId)});bar.addEventListener("pointermove",e=>{if(!drag)return;const win=$("window-"+bar.dataset.drag);win.style.transform="none";win.style.left=Math.max(0,Math.min(innerWidth-win.offsetWidth,e.clientX-drag.x))+"px";win.style.top=Math.max(54,Math.min(innerHeight-100,e.clientY-drag.y))+"px"});bar.addEventListener("pointerup",()=>drag=null);bar.addEventListener("pointercancel",()=>drag=null)});
-function tick(){const time=new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});$("clock").textContent=time;$("topclock").textContent=time;$("taskclock").textContent=time}tick();setInterval(tick,1000);
-window.addEventListener("load",()=>setTimeout(()=>{$("boot").classList.add("hidden");const username=localStorage.getItem(SESSION_KEY),user=readUsers().find(u=>u.username===username);if(user)showDesktop(user);else{$("login").classList.remove("hidden");switchAuth("login")}},800));
+"use strict";
 
-const marshalSearch=$("marshal-search");
-if(marshalSearch){
- marshalSearch.addEventListener("input",()=>{
-  const q=marshalSearch.value.trim().toLocaleLowerCase("fr");
-  let visible=0;
-  document.querySelectorAll(".marshal-chapter").forEach(chapter=>{
-   let chapterVisible=0;
-   chapter.querySelectorAll(".marshal-article").forEach(article=>{
-    const match=!q||article.textContent.toLocaleLowerCase("fr").includes(q);
-    article.hidden=!match;
-    if(match){visible++;chapterVisible++;}
-   });
-   chapter.hidden=chapterVisible===0;
+const $ = id => document.getElementById(id);
+const USERS_KEY = "site07_users_v1";
+const SESSION_KEY = "site07_session_v1";
+const services = [
+  "Direction de la sécurité",
+  "Commandement Marshal",
+  "Opérations Marshal",
+  "Administration Marshal",
+  "Formation Marshal",
+  "Personnel du Site-07"
+];
+const titles = {
+  home: "Poste de travail",
+  protocols: "Protocoles Marshal",
+  directory: "Annuaire des services",
+  archives: "Archives & directives"
+};
+
+function readUsers() {
+  try {
+    const users = JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
+    return Array.isArray(users) ? users : [];
+  } catch {
+    return [];
+  }
+}
+function saveUsers(users) {
+  localStorage.setItem(USERS_KEY, JSON.stringify(users));
+}
+function clean(value) {
+  return String(value ?? "").trim().replace(/[<>]/g, "");
+}
+async function hashPassword(password, salt) {
+  if (!window.crypto || !window.crypto.subtle) {
+    throw new Error("La fonction de chiffrement du navigateur est indisponible. Ouvrez le site en HTTPS.");
+  }
+  const data = new TextEncoder().encode(salt + password);
+  const digest = await window.crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("");
+}
+function setMessage(message) {
+  const target = $("loginmsg");
+  if (target) target.textContent = message;
+}
+function switchAuth(mode) {
+  const registering = mode === "register";
+  $("login-form").classList.toggle("hidden", registering);
+  $("register-form").classList.toggle("hidden", !registering);
+  $("tab-login").classList.toggle("active", !registering);
+  $("tab-register").classList.toggle("active", registering);
+  setMessage(registering
+    ? "Créez votre profil personnel pour le terminal."
+    : "Saisissez les identifiants de votre compte.");
+}
+$("tab-login").addEventListener("click", () => switchAuth("login"));
+$("tab-register").addEventListener("click", () => switchAuth("register"));
+
+function showLogin() {
+  try { localStorage.removeItem(SESSION_KEY); } catch {}
+  $("desktop").classList.add("hidden");
+  $("login").classList.remove("hidden");
+  $("login-pass").value = "";
+  switchAuth("login");
+  $("login-user").focus();
+}
+function showDesktop(user) {
+  $("login").classList.add("hidden");
+  $("desktop").classList.remove("hidden");
+  $("displayname").textContent = user.name || "Personnel";
+  $("displayrole").textContent = user.service || "Personnel du Site-07";
+  $("avatar").textContent = (user.name || "S").charAt(0).toUpperCase();
+  $("welcome").textContent = "Bienvenue, " + (user.name || "Personnel") + ".";
+  $("statrole").textContent = user.service || "—";
+  openWindow("home");
+}
+async function login() {
+  const username = clean($("login-user").value).toLowerCase();
+  const password = $("login-pass").value;
+  if (!username || !password) {
+    setMessage("Veuillez saisir votre identifiant et votre mot de passe.");
+    return;
+  }
+  const user = readUsers().find(item => item.username === username);
+  if (!user || !user.salt || !user.passwordHash) {
+    setMessage("Identifiant ou mot de passe incorrect.");
+    return;
+  }
+  const hash = await hashPassword(password, user.salt);
+  if (hash !== user.passwordHash) {
+    setMessage("Identifiant ou mot de passe incorrect.");
+    return;
+  }
+  localStorage.setItem(SESSION_KEY, user.username);
+  showDesktop(user);
+}
+async function register() {
+  const name = clean($("new-name").value);
+  const username = clean($("new-user").value).toLowerCase();
+  const service = $("new-service").value;
+  const password = $("new-pass").value;
+  const confirmation = $("new-pass-confirm").value;
+
+  if (name.length < 2 || !/^[a-z0-9._-]{3,24}$/.test(username)) {
+    setMessage("Vérifiez le nom et l'identifiant (3 à 24 caractères : lettres, chiffres, . _ -).");
+    return;
+  }
+  if (password.length < 8) {
+    setMessage("Le mot de passe doit contenir au moins 8 caractères.");
+    return;
+  }
+  if (password !== confirmation) {
+    setMessage("Les deux mots de passe ne correspondent pas.");
+    return;
+  }
+
+  const users = readUsers();
+  if (users.some(user => user.username === username)) {
+    setMessage("Cet identifiant est déjà utilisé sur ce navigateur.");
+    return;
+  }
+
+  const salt = Array.from(window.crypto.getRandomValues(new Uint8Array(16)),
+    byte => byte.toString(16).padStart(2, "0")).join("");
+  const user = { name, username, service, salt, passwordHash: await hashPassword(password, salt) };
+  users.push(user);
+  saveUsers(users);
+  localStorage.setItem(SESSION_KEY, username);
+  showDesktop(user);
+}
+$("loginbtn").addEventListener("click", () => login().catch(error => setMessage(error.message || "Connexion impossible.")));
+$("registerbtn").addEventListener("click", () => register().catch(error => setMessage(error.message || "Création du compte impossible.")));
+$("login-pass").addEventListener("keydown", event => {
+  if (event.key === "Enter") login().catch(error => setMessage(error.message || "Connexion impossible."));
+});
+$("new-pass-confirm").addEventListener("keydown", event => {
+  if (event.key === "Enter") register().catch(error => setMessage(error.message || "Création du compte impossible."));
+});
+$("logout").addEventListener("click", showLogin);
+
+const directory = $("directory");
+if (directory) {
+  services.forEach(service => {
+    const article = document.createElement("article");
+    const heading = document.createElement("b");
+    const description = document.createElement("small");
+    heading.textContent = service;
+    description.textContent = "Service du Département de la sécurité";
+    article.append(heading, description);
+    directory.appendChild(article);
   });
-  $("marshal-count").textContent=q?visible+" ARTICLE(S) TROUVÉ(S)":"50 ARTICLES · 5 CHAPITRES";
- });
 }
 
-const marshalSearch=$("marshal-search");
-if(marshalSearch){
- marshalSearch.addEventListener("input",()=>{
-  const q=marshalSearch.value.trim().toLocaleLowerCase("fr");
-  let visible=0;
-  document.querySelectorAll(".marshal-article").forEach(article=>{
-   const match=!q||article.textContent.toLocaleLowerCase("fr").includes(q);
-   article.hidden=!match;if(match)visible++;
+let zIndex = 10;
+function focusWindow(key) {
+  const target = $("window-" + key);
+  if (!target) return;
+  document.querySelectorAll(".app-window.open").forEach(win => {
+    win.style.zIndex = String(++zIndex);
   });
-  document.querySelectorAll(".marshal-heading").forEach(heading=>{
-   let next=heading.nextElementSibling,has=false;
-   while(next&&!next.classList.contains("marshal-heading")){
-    if(next.classList.contains("marshal-article")&&!next.hidden)has=true;
-    if((next.classList.contains("marshal-subheading")||next.classList.contains("marshal-paragraph"))&&(!q||next.textContent.toLocaleLowerCase("fr").includes(q)))has=true;
-    next=next.nextElementSibling;
-   }
-   heading.hidden=!!q&&!has;
+  target.style.zIndex = String(++zIndex);
+  document.querySelectorAll(".task-app").forEach(button => {
+    button.classList.toggle("active", button.dataset.task === key);
   });
-  $("marshal-count").textContent=q?visible+" ARTICLE(S) TROUVÉ(S)":"165 ARTICLES";
- });
 }
+function openWindow(key) {
+  const win = $("window-" + key);
+  if (!win) return;
+  win.classList.add("open");
+  focusWindow(key);
+  $("start-menu").classList.add("hidden");
+  $("start-button").classList.remove("active");
+
+  let task = $("task-" + key);
+  if (!task) {
+    task = document.createElement("button");
+    task.id = "task-" + key;
+    task.className = "task-app";
+    task.dataset.task = key;
+    task.type = "button";
+    task.textContent = titles[key] || key;
+    task.addEventListener("click", () => {
+      if (win.classList.contains("open")) {
+        win.classList.remove("open");
+        task.classList.remove("active");
+      } else {
+        win.classList.add("open");
+        focusWindow(key);
+      }
+    });
+    $("task-apps").appendChild(task);
+  }
+  task.classList.add("active");
+}
+function closeWindow(key) {
+  const win = $("window-" + key);
+  if (win) win.classList.remove("open");
+  const task = $("task-" + key);
+  if (task) task.remove();
+}
+document.querySelectorAll("[data-open]").forEach(button => {
+  button.addEventListener("click", () => openWindow(button.dataset.open));
+});
+document.querySelectorAll("[data-close]").forEach(button => {
+  button.addEventListener("click", () => closeWindow(button.dataset.close));
+});
+document.querySelectorAll("[data-min]").forEach(button => {
+  button.addEventListener("click", () => {
+    const key = button.dataset.min;
+    const win = $("window-" + key);
+    if (win) win.classList.remove("open");
+    const task = $("task-" + key);
+    if (task) task.classList.remove("active");
+  });
+});
+
+$("start-button").addEventListener("click", () => {
+  const menu = $("start-menu");
+  menu.classList.toggle("hidden");
+  $("start-button").classList.toggle("active", !menu.classList.contains("hidden"));
+});
+document.addEventListener("click", event => {
+  if (!event.target.closest("#start-menu") && !event.target.closest("#start-button")) {
+    $("start-menu").classList.add("hidden");
+    $("start-button").classList.remove("active");
+  }
+});
+
+/* Déplacement borné à la zone de bureau, y compris sur écran tactile. */
+document.querySelectorAll(".window-titlebar").forEach(bar => {
+  let drag = null;
+  bar.addEventListener("pointerdown", event => {
+    if (event.target.closest("button")) return;
+    const key = bar.dataset.drag;
+    const win = $("window-" + key);
+    if (!win || win.classList.contains("maximized")) return;
+    focusWindow(key);
+    const bounds = win.getBoundingClientRect();
+    const parent = win.parentElement.getBoundingClientRect();
+    drag = {
+      pointerId: event.pointerId,
+      offsetX: event.clientX - bounds.left,
+      offsetY: event.clientY - bounds.top,
+      parentLeft: parent.left,
+      parentTop: parent.top,
+      parentWidth: parent.width,
+      parentHeight: parent.height
+    };
+    bar.setPointerCapture(event.pointerId);
+  });
+  bar.addEventListener("pointermove", event => {
+    if (!drag || event.pointerId !== drag.pointerId) return;
+    const win = $("window-" + bar.dataset.drag);
+    if (!win) return;
+    win.style.transform = "none";
+    const maxLeft = Math.max(0, drag.parentWidth - win.offsetWidth);
+    const maxTop = Math.max(0, drag.parentHeight - win.offsetHeight);
+    const left = event.clientX - drag.parentLeft - drag.offsetX;
+    const top = event.clientY - drag.parentTop - drag.offsetY;
+    win.style.left = Math.max(0, Math.min(maxLeft, left)) + "px";
+    win.style.top = Math.max(0, Math.min(maxTop, top)) + "px";
+  });
+  const stopDrag = event => {
+    if (drag && event.pointerId === drag.pointerId) drag = null;
+  };
+  bar.addEventListener("pointerup", stopDrag);
+  bar.addEventListener("pointercancel", stopDrag);
+});
+
+function updateClock() {
+  const time = new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+  $("clock").textContent = time;
+  $("topclock").textContent = time;
+  $("taskclock").textContent = time;
+}
+updateClock();
+window.setInterval(updateClock, 1000);
+
+/* Recherche dans les 165 articles et masquage des titres sans résultat. */
+const marshalSearch = $("marshal-search");
+if (marshalSearch) {
+  const articles = Array.from(document.querySelectorAll(".marshal-article"));
+  const headings = Array.from(document.querySelectorAll(".marshal-heading"));
+  const total = articles.length;
+  const count = $("marshal-count");
+
+  marshalSearch.addEventListener("input", () => {
+    const query = marshalSearch.value.trim().toLocaleLowerCase("fr");
+    let visible = 0;
+
+    articles.forEach(article => {
+      const match = !query || article.textContent.toLocaleLowerCase("fr").includes(query);
+      article.hidden = !match;
+      if (match) visible++;
+    });
+
+    headings.forEach(heading => {
+      let next = heading.nextElementSibling;
+      let hasResult = false;
+      while (next && !next.classList.contains("marshal-heading")) {
+        if (next.classList.contains("marshal-article") && !next.hidden) hasResult = true;
+        next = next.nextElementSibling;
+      }
+      heading.hidden = Boolean(query) && !hasResult;
+    });
+
+    if (count) {
+      count.textContent = query
+        ? visible + " ARTICLE(S) TROUVÉ(S)"
+        : total + " ARTICLES";
+    }
+  });
+
+  if (count) count.textContent = total + " ARTICLES";
+}
+
+window.addEventListener("load", () => {
+  window.setTimeout(() => {
+    $("boot").classList.add("hidden");
+    let username = null;
+    try { username = localStorage.getItem(SESSION_KEY); } catch {}
+    const user = readUsers().find(item => item.username === username);
+    if (user) showDesktop(user);
+    else {
+      $("login").classList.remove("hidden");
+      switchAuth("login");
+    }
+  }, 800);
+});
