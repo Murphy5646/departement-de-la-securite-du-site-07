@@ -15,7 +15,10 @@ const titles = {
   home: "Poste de travail",
   protocols: "Protocoles Marshal",
   directory: "Annuaire des services",
-  archives: "Archives & directives"
+  archives: "Archives & directives",
+  notes: "Bloc-notes", calculator: "Calculatrice", calendar: "Calendrier",
+  tasks: "Gestionnaire de tâches", reports: "Rapports RP", inventory: "Inventaire",
+  mail: "Messagerie interne", settings: "Paramètres"
 };
 
 function readUsers() {
