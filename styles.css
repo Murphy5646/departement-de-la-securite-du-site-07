@@ -146,3 +146,10 @@
 .task-app.active{border-bottom-color:#75d4e4;background:#1b4054}
 .task-app:not(.active):hover{background:#1b3548}
 @media(max-width:700px){.app-window{resize:none;min-width:0;max-width:none;max-height:none}.app-window.snapped-left,.app-window.snapped-right{left:8px!important;width:calc(100% - 16px)!important}.window-controls button{width:36px}}
+
+/* Recherche du lanceur et outils système. */
+.start-search{display:block;width:calc(100% - 20px);margin:8px 10px 12px;padding:10px 12px;color:var(--text,#e8eef5);background:rgba(5,15,27,.82);border:1px solid rgba(130,165,195,.28);border-radius:7px;outline:none}
+.start-search:focus{border-color:var(--accent,#65b9d8);box-shadow:0 0 0 2px rgba(75,170,210,.15)}
+.start-menu button[hidden]{display:none}
+.settings-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.settings-actions button{white-space:nowrap}
