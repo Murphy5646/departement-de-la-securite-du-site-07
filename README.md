@@ -29,3 +29,9 @@ Projet communautaire non officiel. Les rôles affichés ne confèrent aucune aut
 
 ## Applications SEC-OS
 Le bureau comprend notamment les applications suivantes : bloc-notes avec sauvegarde locale, calculatrice, calendrier et échéances, gestionnaire de tâches, formulaire de rapports RP, inventaire fictif, messagerie locale de démonstration et paramètres de confort. Ces modules stockent leurs données dans le navigateur utilisé. La messagerie ne transmet aucun message à d'autres comptes et l'inventaire est un exemple fictif.
+
+
+## 20 applications supplémentaires
+SEC-OS comprend aussi : convertisseur d'unités, chronomètre, minuteur, calcul de dates, contacts locaux, planning d'équipes RP, suivi de maintenance, check-lists, quiz de formation, glossaire SCP, plan schématique fictif, demandes internes, réunions, journal de service, modèles de documents, compteur de texte, panneau d'annonces local, favoris textuels, mode concentration et statistiques locales.
+
+Ces outils sont des fonctions de confort pour le jeu de rôle. Les données créées sont conservées dans le stockage local du navigateur et ne sont pas synchronisées entre les appareils. Les cartes, équipes, contacts et procédures présentés ne constituent pas des informations réelles du site ni des consignes opérationnelles.
