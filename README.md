@@ -1,17 +1,13 @@
 # Département de la sécurité — Site-07
 
-Portail communautaire en français, inspiré d'un terminal informatique institutionnel de l'univers SCP.
+Portail communautaire en français, présenté sous la forme d'un terminal informatique institutionnel de l'univers SCP.
 
-## Contenu
-
-- Écran de démarrage animé et interface de connexion.
-- Profils de démonstration pour la Direction et l'Unité Marshal.
-- Code des protocoles Marshal version 1.2 : 165 articles consultables.
-- Registre des services, directives et archives.
-- Logo du Site-07 intégré.
+## Fichiers
+- `index.html` : écran de démarrage, connexion et bureau.
+- `styles.css` : interface responsive sombre.
+- `app.js` : animation, profils de démonstration et navigation.
 
 ## Démarrage local
-
 Depuis la racine du projet :
 
 ```bash
@@ -20,12 +16,13 @@ python -m http.server 8000
 
 Puis ouvrir http://localhost:8000.
 
-## Connexion
+## Connexion de démonstration
+Les identifiants de démonstration sont affichés dans le panneau de connexion. Ils sont publics et codés côté navigateur : ils ne constituent pas une authentification sécurisée. Ne saisissez aucun vrai mot de passe ni donnée personnelle.
 
-Les identifiants affichés sur la page sont des codes de démonstration publics. La connexion fonctionne uniquement dans le navigateur et ne constitue pas une authentification sécurisée. Ne saisissez jamais de vrai mot de passe.
+## Protocoles Marshal
+La rubrique est préparée pour recevoir le texte source du Code Marshal. Le document complet n'est pas encore inclus dans cette version ; les articles ne sont pas inventés.
 
-## Publication
+## Publication GitHub Pages
+Dans le dépôt : Settings → Pages → Deploy from a branch → `main` → `/ (root)`.
 
-Le projet est conçu pour GitHub Pages : Settings → Pages → Deploy from a branch → `main` → `/ (root)`.
-
-Ce portail est un projet communautaire non officiel et n'est affilié à aucune organisation ou autorité réelle. Les profils ne confèrent aucune autorité réelle.
+Projet communautaire non officiel. Les profils et titres affichés sont des éléments de jeu et ne confèrent aucune autorité réelle.
