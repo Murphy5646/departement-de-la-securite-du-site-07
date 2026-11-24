@@ -328,3 +328,259 @@ window.addEventListener("load", () => {
     }
   }, 800);
 });
+
+
+/* Applications complémentaires — données conservées sur cet appareil. */
+const APP_KEYS = {
+  notes: "site07_notes_v1",
+  tasks: "site07_tasks_v1",
+  reports: "site07_reports_v1",
+  events: "site07_events_v1",
+  mail: "site07_mail_v1",
+  comfort: "site07_comfort_v1"
+};
+function readAppData(key, fallback) {
+  try {
+    const value = JSON.parse(localStorage.getItem(key));
+    return value ?? fallback;
+  } catch { return fallback; }
+}
+function writeAppData(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); return true; }
+  catch { return false; }
+}
+function makeAppItem(tag, className, value) {
+  const element = document.createElement(tag);
+  if (className) element.className = className;
+  element.textContent = value;
+  return element;
+}
+
+/* Bloc-notes : sauvegarde automatique. */
+const notesInput = $("notes-content");
+if (notesInput) {
+  notesInput.value = localStorage.getItem(APP_KEYS.notes) || "";
+  notesInput.addEventListener("input", () => {
+    const ok = writeAppData(APP_KEYS.notes, notesInput.value);
+    $("notes-status").textContent = ok ? "Sauvegardé localement." : "Stockage indisponible ou saturé.";
+  });
+}
+
+/* Calculatrice : analyse arithmétique limitée, sans eval() ni exécution de code. */
+function calculateExpression(source) {
+  const normalized = source.replace(/×/g, "*").replace(/÷/g, "/").replace(/−/g, "-").replace(/,/g, ".");
+  const tokens = normalized.match(/(?:\d+(?:\.\d*)?|\.\d+)|[()+*/-]/g) || [];
+  if (tokens.join("") !== normalized.replace(/\s+/g, "")) throw new Error("Expression invalide");
+  let position = 0;
+  function factor() {
+    const token = tokens[position++];
+    if (token === "+") return factor();
+    if (token === "-") return -factor();
+    if (token === "(") {
+      const value = expression();
+      if (tokens[position++] !== ")") throw new Error("Parenthèse manquante");
+      return value;
+    }
+    if (token === undefined || !/^\d*\.?\d+$/.test(token)) throw new Error("Nombre attendu");
+    return Number(token);
+  }
+  function term() {
+    let value = factor();
+    while (tokens[position] === "*" || tokens[position] === "/") {
+      const operator = tokens[position++];
+      const right = factor();
+      if (operator === "/" && right === 0) throw new Error("Division par zéro");
+      value = operator === "*" ? value * right : value / right;
+    }
+    return value;
+  }
+  function expression() {
+    let value = term();
+    while (tokens[position] === "+" || tokens[position] === "-") {
+      const operator = tokens[position++];
+      const right = term();
+      value = operator === "+" ? value + right : value - right;
+    }
+    return value;
+  }
+  if (!tokens.length) throw new Error("Saisissez un calcul");
+  const result = expression();
+  if (position !== tokens.length || !Number.isFinite(result)) throw new Error("Calcul impossible");
+  return String(Number(result.toPrecision(12)));
+}
+const calcDisplay = $("calc-display");
+if (calcDisplay) {
+  document.querySelectorAll("[data-calc]").forEach(button => {
+    button.addEventListener("click", () => {
+      const key = button.dataset.calc;
+      if (key === "C") calcDisplay.value = "";
+      else if (key === "⌫") calcDisplay.value = calcDisplay.value.slice(0, -1);
+      else if (key === "=") {
+        try { calcDisplay.value = calculateExpression(calcDisplay.value); }
+        catch (error) { calcDisplay.value = error.message; }
+      } else if (calcDisplay.value.length < 80) calcDisplay.value += key;
+    });
+  });
+  calcDisplay.addEventListener("keydown", event => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      try { calcDisplay.value = calculateExpression(calcDisplay.value); }
+      catch (error) { calcDisplay.value = error.message; }
+    }
+  });
+}
+
+/* Calendrier et échéances. */
+const calendarDate = $("calendar-date");
+function renderEvents() {
+  const list = $("calendar-events");
+  if (!list) return;
+  list.replaceChildren();
+  const events = readAppData(APP_KEYS.events, []);
+  events.forEach((item, index) => {
+    const row = makeAppItem("div", "app-list-item", "");
+    const label = makeAppItem("span", "", item.date + " — " + item.title);
+    const remove = makeAppItem("button", "secondary", "Supprimer");
+    remove.type = "button";
+    remove.addEventListener("click", () => {
+      const next = readAppData(APP_KEYS.events, []);
+      next.splice(index, 1); writeAppData(APP_KEYS.events, next); renderEvents();
+    });
+    row.append(label, remove); list.appendChild(row);
+  });
+}
+if (calendarDate) {
+  calendarDate.value = new Date().toISOString().slice(0, 10);
+  calendarDate.addEventListener("change", () => {
+    $("calendar-detail").textContent = calendarDate.value
+      ? "Date sélectionnée : " + new Date(calendarDate.value + "T12:00:00").toLocaleDateString("fr-FR", {dateStyle:"full"})
+      : "Sélectionnez une date.";
+  });
+  $("calendar-save").addEventListener("click", () => {
+    const title = clean($("calendar-event").value);
+    if (!calendarDate.value || !title) { $("calendar-detail").textContent = "Indiquez une date et un intitulé."; return; }
+    const events = readAppData(APP_KEYS.events, []);
+    events.push({date:calendarDate.value,title});
+    if (!writeAppData(APP_KEYS.events, events)) { $("calendar-detail").textContent = "Impossible d'enregistrer."; return; }
+    $("calendar-event").value = ""; $("calendar-detail").textContent = "Échéance enregistrée localement."; renderEvents();
+  });
+  renderEvents();
+}
+
+/* Gestionnaire de tâches. */
+function renderTasks() {
+  const list = $("task-list"); if (!list) return;
+  list.replaceChildren();
+  readAppData(APP_KEYS.tasks, []).forEach(item => {
+    const row = makeAppItem("div", "app-list-item", "");
+    const label = makeAppItem("span", item.done ? "task-done" : "", item.title);
+    const done = makeAppItem("button", "secondary", item.done ? "Rouvrir" : "Terminer");
+    const remove = makeAppItem("button", "secondary", "×");
+    done.type = remove.type = "button";
+    done.addEventListener("click", () => {
+      const tasks = readAppData(APP_KEYS.tasks, []);
+      const found = tasks.find(task => task.id === item.id);
+      if (found) found.done = !found.done;
+      writeAppData(APP_KEYS.tasks, tasks); renderTasks();
+    });
+    remove.addEventListener("click", () => {
+      writeAppData(APP_KEYS.tasks, readAppData(APP_KEYS.tasks, []).filter(task => task.id !== item.id));
+      renderTasks();
+    });
+    row.append(label, done, remove); list.appendChild(row);
+  });
+}
+$("task-add").addEventListener("click", () => {
+  const input = $("task-input"), title = clean(input.value);
+  if (!title) return;
+  const tasks = readAppData(APP_KEYS.tasks, []);
+  tasks.push({id:Date.now()+Math.random(),title,done:false});
+  writeAppData(APP_KEYS.tasks, tasks); input.value = ""; renderTasks();
+});
+$("task-input").addEventListener("keydown", event => { if (event.key === "Enter") $("task-add").click(); });
+renderTasks();
+
+/* Rapports RP. */
+function renderReports() {
+  const list = $("report-list"); if (!list) return;
+  list.replaceChildren();
+  readAppData(APP_KEYS.reports, []).slice().reverse().forEach(report => {
+    const card = makeAppItem("article", "app-list-item app-report", "");
+    card.append(makeAppItem("b", "", report.title));
+    card.append(makeAppItem("small", "", report.type + " · " + report.date));
+    card.append(makeAppItem("p", "", report.body));
+    list.appendChild(card);
+  });
+}
+$("report-save").addEventListener("click", () => {
+  const title = clean($("report-title").value), body = clean($("report-body").value);
+  if (!title || !body) { $("report-list").textContent = "Complétez l'objet et la description avant d'enregistrer."; return; }
+  const reports = readAppData(APP_KEYS.reports, []);
+  reports.push({title,body,type:$("report-type").value,date:new Date().toLocaleString("fr-FR")});
+  if (!writeAppData(APP_KEYS.reports, reports)) { $("report-list").textContent = "Stockage indisponible."; return; }
+  $("report-title").value = ""; $("report-body").value = ""; renderReports();
+});
+renderReports();
+
+/* Inventaire fictif et recherche. */
+const inventory = [
+  ["KIT-001","Kit de premiers secours (fictif)","Infirmerie","Disponible"],
+  ["COM-014","Terminal de communication RP","Administration","En service"],
+  ["DOC-022","Dossiers vierges","Archives","Disponible"],
+  ["TEC-008","Outil de diagnostic informatique","Maintenance","Disponible"],
+  ["LOG-003","Fournitures de bureau","Administration","Disponible"],
+  ["FOR-011","Manuel de formation","Formation","Disponible"],
+  ["SEC-005","Badge d'accès fictif","Accueil","À attribuer"],
+  ["MOB-002","Tablette de service RP","Commandement","En service"]
+];
+function renderInventory(query = "") {
+  const list = $("inventory-list"); if (!list) return;
+  list.replaceChildren();
+  inventory.filter(item => item.join(" ").toLocaleLowerCase("fr").includes(query)).forEach(item => {
+    const row = makeAppItem("div", "app-list-item", "");
+    row.append(makeAppItem("b", "", item[0] + " — " + item[1]));
+    row.append(makeAppItem("small", "", item[2] + " · " + item[3]));
+    list.appendChild(row);
+  });
+}
+$("inventory-search").addEventListener("input", () => renderInventory($("inventory-search").value.trim().toLocaleLowerCase("fr")));
+renderInventory();
+
+/* Messagerie locale de démonstration. */
+function renderMail() {
+  const list = $("mail-list"); if (!list) return;
+  list.replaceChildren();
+  readAppData(APP_KEYS.mail, []).slice().reverse().forEach(message => {
+    const card = makeAppItem("article", "app-list-item", "");
+    card.append(makeAppItem("b", "", message.subject));
+    card.append(makeAppItem("small", "", "À : " + message.to + " · " + message.date));
+    card.append(makeAppItem("p", "", message.body));
+    list.appendChild(card);
+  });
+}
+$("mail-send").addEventListener("click", () => {
+  const to = clean($("mail-to").value), subject = clean($("mail-subject").value), body = clean($("mail-body").value);
+  if (!to || !subject || !body) { $("mail-list").textContent = "Complétez le destinataire, l'objet et le message."; return; }
+  const messages = readAppData(APP_KEYS.mail, []);
+  messages.push({to,subject,body,date:new Date().toLocaleString("fr-FR")});
+  if (!writeAppData(APP_KEYS.mail, messages)) { $("mail-list").textContent = "Stockage indisponible."; return; }
+  $("mail-to").value = ""; $("mail-subject").value = ""; $("mail-body").value = ""; renderMail();
+});
+renderMail();
+
+/* Paramètres de confort et réinitialisation ciblée. */
+const comfortButton = $("comfort-toggle");
+function setComfort(enabled) {
+  document.body.classList.toggle("comfort-mode", enabled);
+  comfortButton.textContent = enabled ? "DÉSACTIVER" : "ACTIVER";
+  writeAppData(APP_KEYS.comfort, enabled);
+}
+setComfort(readAppData(APP_KEYS.comfort, false) === true);
+comfortButton.addEventListener("click", () => setComfort(!document.body.classList.contains("comfort-mode")));
+$("apps-reset").addEventListener("click", () => {
+  if (!window.confirm("Effacer les notes, tâches, rapports, échéances et messages enregistrés sur cet appareil ?")) return;
+  [APP_KEYS.notes,APP_KEYS.tasks,APP_KEYS.reports,APP_KEYS.events,APP_KEYS.mail].forEach(key => localStorage.removeItem(key));
+  notesInput.value = ""; $("notes-status").textContent = "Notes effacées.";
+  renderTasks(); renderReports(); renderEvents(); renderMail();
+  $("settings-status").textContent = "Les données des applications ont été réinitialisées. Les comptes sont conservés.";
+});
