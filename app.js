@@ -192,7 +192,7 @@ function openWindow(key) {
       ]);
     });
     task.addEventListener("click", () => {
-      if (win.classList.contains("open")) {
+      if (win.classList.contains("open") && task.classList.contains("active")) {
         win.classList.remove("open");
         task.classList.remove("active");
       } else {
@@ -216,7 +216,7 @@ document.querySelectorAll("[data-open]").forEach(button => {
     button.addEventListener("click", event => {
       document.querySelectorAll(".desktop-icon.selected").forEach(icon => icon.classList.remove("selected"));
       button.classList.add("selected");
-      if (event.detail >= 2) openWindow(button.dataset.open);
+      
     });
     button.addEventListener("dblclick", () => openWindow(button.dataset.open));
   } else {
@@ -283,7 +283,12 @@ document.querySelectorAll(".window-titlebar").forEach(bar => {
     win.style.top = Math.max(0, Math.min(maxTop, top)) + "px";
   });
   const stopDrag = event => {
-    if (drag && event.pointerId === drag.pointerId) drag = null;
+    if (!drag || event.pointerId !== drag.pointerId) return;
+    const key=bar.dataset.drag, win=$("window-"+key), parent=win?.parentElement.getBoundingClientRect();
+    if(parent && event.clientY-parent.top<18) toggleMaximize(key);
+    else if(parent && event.clientX-parent.left<12) snapWindow(key,"left");
+    else if(parent && parent.right-event.clientX<12) snapWindow(key,"right");
+    drag = null;
   };
   bar.addEventListener("pointerup", stopDrag);
   bar.addEventListener("pointercancel", stopDrag);
@@ -915,8 +920,34 @@ document.querySelectorAll(".window-titlebar").forEach(bar=>{
 });
 function toggleMaximize(key){
  const win=$("window-"+key);if(!win)return;
- win.classList.toggle("maximized");
- if(!win.classList.contains("maximized")){win.style.left="";win.style.top="";win.style.width="";win.style.height="";}
+ if(!win.classList.contains("maximized")){
+  const r=win.getBoundingClientRect(),p=win.parentElement.getBoundingClientRect();
+  win.dataset.restoreRect=JSON.stringify({left:r.left-p.left,top:r.top-p.top,width:r.width,height:r.height});
+  win.classList.add("maximized");win.classList.remove("snapped-left","snapped-right");
+  win.style.left="8px";win.style.top="8px";win.style.width="calc(100% - 16px)";win.style.height="calc(100% - 16px)";win.style.transform="none";
+ }else restoreWindow(key);
+ focusWindow(key);
+}
+function restoreWindow(key){
+ const win=$("window-"+key);if(!win)return;
+ win.classList.remove("maximized","snapped-left","snapped-right");
+ let rect={};try{rect=JSON.parse(win.dataset.restoreRect||"{}");}catch{}
+ win.style.left=Number.isFinite(rect.left)?rect.left+"px":"";
+ win.style.top=Number.isFinite(rect.top)?rect.top+"px":"";
+ win.style.width=Number.isFinite(rect.width)?rect.width+"px":"";
+ win.style.height=Number.isFinite(rect.height)?rect.height+"px":"";
+ win.style.transform="none";
+}
+function snapWindow(key,side){
+ const win=$("window-"+key);if(!win)return;
+ if(!win.dataset.restoreRect){
+  const r=win.getBoundingClientRect(),p=win.parentElement.getBoundingClientRect();
+  win.dataset.restoreRect=JSON.stringify({left:r.left-p.left,top:r.top-p.top,width:r.width,height:r.height});
+ }
+ win.classList.remove("maximized","snapped-left","snapped-right");
+ win.classList.add(side==="left"?"snapped-left":"snapped-right");
+ win.style.transform="none";win.style.top="8px";win.style.height="calc(100% - 16px)";
+ win.style.width="calc(50% - 12px)";win.style.left=side==="left"?"8px":"calc(50% + 4px)";
  focusWindow(key);
 }
 document.querySelectorAll("[data-maximize]").forEach(button=>button.addEventListener("click",()=>toggleMaximize(button.dataset.maximize)));
