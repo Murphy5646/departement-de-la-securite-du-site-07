@@ -49,3 +49,36 @@
 .marshal-annex-status{color:#a9dcb7;font-size:12px}
 .marshal-article[hidden],.marshal-heading[hidden],.marshal-subheading[hidden],.marshal-paragraph[hidden]{display:none!important}
 @media(max-width:700px){.document-meta{grid-template-columns:repeat(2,minmax(0,1fr))}.document-toolbar{grid-template-columns:1fr}.document-toolbar span{padding:0}.marshal-index nav{grid-template-columns:1fr}}
+
+
+/* Applications SEC-OS complémentaires */
+.desktop-icons{max-height:calc(100vh - 150px);overflow-y:auto;scrollbar-width:thin}
+.app-action{margin-top:14px}
+.inline-form{display:flex;gap:9px;margin:16px 0}
+.inline-form input{flex:1;min-width:0}
+.app-list{display:grid;gap:9px;margin-top:16px}
+.app-list-item{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 14px;background:#0b1c2a;border:1px solid #29485c;color:#d4e8ef}
+.app-list-item>span,.app-list-item>b{flex:1;min-width:160px}
+.app-list-item small{display:block;width:100%;color:#86a5b5;font-size:10px}
+.app-list-item p{width:100%;margin:4px 0 0;color:#b6cbd5;font-size:12px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}
+.app-list-item button{padding:6px 9px;background:#122c3e;border:1px solid #35596b;color:#cce5ed}
+.app-report{display:block}
+.task-done{text-decoration:line-through;color:#7895a4}
+.calc-display{font:24px Consolas,monospace;text-align:right;letter-spacing:.04em;margin:12px 0 14px}
+.calc-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;max-width:440px}
+.calc-grid button{min-height:48px;background:#102b3d;border:1px solid #365d70;color:#e0f5fa;font:17px Consolas}
+.calc-grid button:hover{background:#1c4a60}
+.calc-grid button[data-calc="="]{background:#1b5968;border-color:#69b7c6}
+.calc-grid button[data-calc="C"]{color:#efc2a8}
+.settings-row{display:flex;justify-content:space-between;align-items:center;gap:18px;padding:17px 0;border-bottom:1px solid #29485c}
+.settings-row p{margin:6px 0 0}
+.secondary{padding:9px 12px;background:#102638;border:1px solid #36566a;color:#d1e5ed;cursor:pointer}
+.secondary:hover{background:#1a4054}
+.comfort-mode .window-content{line-height:1.8}
+.comfort-mode .window-content p,.comfort-mode .window-content label{line-height:1.9}
+@media(max-width:700px){
+ .inline-form{flex-direction:column}
+ .settings-row{align-items:flex-start;flex-direction:column}
+ .calc-grid button{min-height:44px}
+ .app-list-item>span,.app-list-item>b{min-width:100%}
+}
