@@ -19,4 +19,19 @@
 <div id="page-protocols" class="page hidden"><p class="eyebrow">DOCUMENTATION / MARSHAL</p><h2>Protocoles Marshal</h2><p class="muted">Référentiel des procédures et dispositions du service Marshal.</p><div class="notice"><b>CODE MARSHAL — VERSION 1.2</b><p>Le document source complet doit être ajouté pour publier fidèlement ses articles. Aucun article n'est inventé.</p></div></div>
 <div id="page-directory" class="page hidden"><p class="eyebrow">ORGANISATION / PERSONNEL</p><h2>Annuaire des services</h2><div id="directory" class="directory"></div></div>
 <div id="page-archives" class="page hidden"><p class="eyebrow">DOCUMENTATION / ARCHIVES</p><h2>Archives & directives</h2><div class="notice"><b>REGISTRE DOCUMENTAIRE</b><p>Aucune directive supplémentaire n'a encore été publiée.</p></div></div></section></div><footer class="desk-footer">SITE-07 · DÉPARTEMENT DE LA SÉCURITÉ <span>SEC-OS // TERMINAL COMMUNAUTAIRE</span></footer></div>
+<script>
+/* Secours d'affichage : ne jamais laisser l'écran de démarrage bloqué. */
+window.setTimeout(function(){
+ const boot=document.getElementById("boot"),login=document.getElementById("login"),desktop=document.getElementById("desktop");
+ if(boot && !boot.classList.contains("hidden")){
+   boot.classList.add("hidden");
+   if(login && desktop && desktop.classList.contains("hidden")) login.classList.remove("hidden");
+ }
+},7000);
+window.addEventListener("error",function(){
+ const boot=document.getElementById("boot"),login=document.getElementById("login");
+ if(boot)boot.classList.add("hidden");
+ if(login)login.classList.remove("hidden");
+});
+</script>
 <script src="app.js"></script></body></html>
