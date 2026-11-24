@@ -126,3 +126,23 @@
  .app-window{width:calc(100vw - 16px);height:calc(100vh - 120px);min-height:240px}
  .desktop-icons{top:64px;left:5px;max-width:calc(100vw - 10px);max-height:calc(100vh - 130px)}
 }
+
+
+/* Fenêtres façon Windows : redimensionnement, états et contrôles */
+.app-window{resize:both;min-width:300px;min-height:220px;max-width:calc(100vw - 150px);max-height:calc(100vh - 125px);border-radius:8px;overflow:hidden}
+.window-titlebar{height:42px;background:linear-gradient(180deg,#18394b,#102b3c);letter-spacing:0;font:13px "Segoe UI",Arial,sans-serif}
+.window-controls{gap:0;height:100%;align-items:stretch}
+.window-controls button{width:43px;height:100%;border:0;border-left:1px solid #52708255;border-radius:0;background:transparent;color:#e5f5fa;font:15px "Segoe UI",Arial,sans-serif}
+.window-controls button:hover{background:#31586c}
+.window-controls button[data-close]:hover{background:#c74444;color:white}
+.window-controls button[data-maximize]:hover{background:#31586c}
+.window-content{background:#0a1927}
+.app-window.maximized{resize:none;max-width:none;max-height:none;border-radius:5px}
+.app-window.snapped-left,.app-window.snapped-right{resize:both;max-width:none;max-height:none;border-radius:6px}
+.app-window.snapped-left{left:8px!important;width:calc(50% - 12px)!important}
+.app-window.snapped-right{left:calc(50% + 4px)!important;width:calc(50% - 12px)!important}
+.app-window:focus-within{border-color:#72bfd0}
+.task-app{position:relative;border-radius:4px 4px 0 0;border-bottom:2px solid transparent}
+.task-app.active{border-bottom-color:#75d4e4;background:#1b4054}
+.task-app:not(.active):hover{background:#1b3548}
+@media(max-width:700px){.app-window{resize:none;min-width:0;max-width:none;max-height:none}.app-window.snapped-left,.app-window.snapped-right{left:8px!important;width:calc(100% - 16px)!important}.window-controls button{width:36px}}
