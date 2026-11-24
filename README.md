@@ -25,3 +25,7 @@ La rubrique contient le Code officiel des protocoles et règlements de l'Unité 
 Dans GitHub : Settings → Pages → Deploy from a branch → `main` → `/ (root)`.
 
 Projet communautaire non officiel. Les rôles affichés ne confèrent aucune autorité réelle.
+
+
+## Applications SEC-OS
+Le bureau comprend notamment les applications suivantes : bloc-notes avec sauvegarde locale, calculatrice, calendrier et échéances, gestionnaire de tâches, formulaire de rapports RP, inventaire fictif, messagerie locale de démonstration et paramètres de confort. Ces modules stockent leurs données dans le navigateur utilisé. La messagerie ne transmet aucun message à d'autres comptes et l'inventaire est un exemple fictif.
