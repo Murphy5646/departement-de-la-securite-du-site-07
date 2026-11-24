@@ -26,3 +26,21 @@ document.addEventListener("click",e=>{if(!e.target.closest("#start-menu")&&!e.ta
 document.querySelectorAll(".window-titlebar").forEach(bar=>{let drag=null;bar.addEventListener("pointerdown",e=>{if(e.target.closest("button"))return;const win=$("window-"+bar.dataset.drag);if(win.classList.contains("maximized"))return;focusWindow(bar.dataset.drag);const r=win.getBoundingClientRect();drag={x:e.clientX-r.left,y:e.clientY-r.top};bar.setPointerCapture(e.pointerId)});bar.addEventListener("pointermove",e=>{if(!drag)return;const win=$("window-"+bar.dataset.drag);win.style.transform="none";win.style.left=Math.max(0,Math.min(innerWidth-win.offsetWidth,e.clientX-drag.x))+"px";win.style.top=Math.max(54,Math.min(innerHeight-100,e.clientY-drag.y))+"px"});bar.addEventListener("pointerup",()=>drag=null);bar.addEventListener("pointercancel",()=>drag=null)});
 function tick(){const time=new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});$("clock").textContent=time;$("topclock").textContent=time;$("taskclock").textContent=time}tick();setInterval(tick,1000);
 window.addEventListener("load",()=>setTimeout(()=>{$("boot").classList.add("hidden");const username=localStorage.getItem(SESSION_KEY),user=readUsers().find(u=>u.username===username);if(user)showDesktop(user);else{$("login").classList.remove("hidden");switchAuth("login")}},800));
+
+const marshalSearch=$("marshal-search");
+if(marshalSearch){
+ marshalSearch.addEventListener("input",()=>{
+  const q=marshalSearch.value.trim().toLocaleLowerCase("fr");
+  let visible=0;
+  document.querySelectorAll(".marshal-chapter").forEach(chapter=>{
+   let chapterVisible=0;
+   chapter.querySelectorAll(".marshal-article").forEach(article=>{
+    const match=!q||article.textContent.toLocaleLowerCase("fr").includes(q);
+    article.hidden=!match;
+    if(match){visible++;chapterVisible++;}
+   });
+   chapter.hidden=chapterVisible===0;
+  });
+  $("marshal-count").textContent=q?visible+" ARTICLE(S) TROUVÉ(S)":"50 ARTICLES · 5 CHAPITRES";
+ });
+}
