@@ -203,8 +203,18 @@ function closeWindow(key) {
   const task = $("task-" + key);
   if (task) task.remove();
 }
+/* Ouverture des applications : clic simple = sélection, double-clic = ouverture sur le bureau. */
 document.querySelectorAll("[data-open]").forEach(button => {
-  button.addEventListener("click", () => openWindow(button.dataset.open));
+  if (button.classList.contains("desktop-icon")) {
+    button.addEventListener("click", event => {
+      document.querySelectorAll(".desktop-icon.selected").forEach(icon => icon.classList.remove("selected"));
+      button.classList.add("selected");
+      if (event.detail >= 2) openWindow(button.dataset.open);
+    });
+    button.addEventListener("dblclick", () => openWindow(button.dataset.open));
+  } else {
+    button.addEventListener("click", () => openWindow(button.dataset.open));
+  }
 });
 document.querySelectorAll("[data-close]").forEach(button => {
   button.addEventListener("click", () => closeWindow(button.dataset.close));
@@ -791,3 +801,136 @@ function renderExtraStats(){
  counts.forEach(([label,count])=>{const card=makeAppItem("div","notice","");card.append(makeAppItem("small","",label),makeAppItem("b","",String(count)));root.appendChild(card);});
 }
 $("st-refresh").addEventListener("click",renderExtraStats);renderExtraStats();
+
+
+/* Fonctions de bureau : menu contextuel, sélection, renommage, tri et fenêtres maximisables. */
+const desktopRoot=$("desktop");
+const desktopIcons=$("desktop-icons")||document.querySelector(".desktop-icons");
+const DESK_LABELS_KEY="site07_desktop_labels_v1";
+function loadDesktopLabels(){try{return JSON.parse(localStorage.getItem(DESK_LABELS_KEY)||"{}")||{};}catch{return {};}}
+function saveDesktopLabels(labels){try{localStorage.setItem(DESK_LABELS_KEY,JSON.stringify(labels));}catch{}}
+function applyDesktopLabels(){
+ const labels=loadDesktopLabels();
+ document.querySelectorAll(".desktop-icon[data-open]").forEach(icon=>{
+  const key=icon.dataset.open,base=titles[key]||key;
+  const label=icon.querySelector("b");
+  if(label)label.textContent=labels[key]||base;
+  icon.title=labels[key]||base;
+ });
+}
+applyDesktopLabels();
+
+/* Menu contextuel personnalisé, compatible souris et écran tactile. */
+let activeContextMenu=null;
+function closeContextMenu(){
+ if(activeContextMenu){activeContextMenu.remove();activeContextMenu=null;}
+}
+function showContextMenu(x,y,items){
+ closeContextMenu();
+ const menu=document.createElement("div");
+ menu.className="desktop-context-menu";
+ menu.setAttribute("role","menu");
+ items.forEach(item=>{
+  if(item.separator){const sep=document.createElement("div");sep.className="context-separator";menu.appendChild(sep);return;}
+  const button=document.createElement("button");
+  button.type="button";button.textContent=item.label;button.setAttribute("role","menuitem");
+  if(item.disabled)button.disabled=true;
+  button.addEventListener("click",()=>{closeContextMenu();item.action&&item.action();});
+  menu.appendChild(button);
+ });
+ desktopRoot.appendChild(menu);
+ const rect=desktopRoot.getBoundingClientRect();
+ menu.style.left=Math.max(4,Math.min(x-rect.left,rect.width-menu.offsetWidth-4))+"px";
+ menu.style.top=Math.max(4,Math.min(y-rect.top,rect.height-menu.offsetHeight-60))+"px";
+ activeContextMenu=menu;
+}
+document.addEventListener("pointerdown",event=>{
+ if(activeContextMenu&&!event.target.closest(".desktop-context-menu"))closeContextMenu();
+});
+document.addEventListener("keydown",event=>{
+ if(event.key==="Escape")closeContextMenu();
+ if(event.altKey&&event.key==="F4"){
+  const focused=document.querySelector(".app-window.open[style*='z-index']");
+  if(focused){event.preventDefault();closeWindow(focused.dataset.window);}
+ }
+});
+if(desktopRoot){
+ desktopRoot.addEventListener("contextmenu",event=>{
+  const icon=event.target.closest(".desktop-icon");
+  const win=event.target.closest(".app-window");
+  const task=event.target.closest(".task-app");
+  if(!icon&&!win&&!task&&!event.target.closest(".taskbar")&&!event.target.closest(".start-menu")){
+   event.preventDefault();
+   showContextMenu(event.clientX,event.clientY,[
+    {label:"Actualiser le bureau",action:()=>{document.querySelectorAll(".desktop-icon.selected").forEach(i=>i.classList.remove("selected"));applyDesktopLabels();}},
+    {label:"Trier les icônes par nom",action:()=>{if(desktopIcons){[...desktopIcons.children].sort((a,b)=>(a.querySelector("b")?.textContent||"").localeCompare(b.querySelector("b")?.textContent||"","fr")).forEach(el=>desktopIcons.appendChild(el));}}},
+    {label:"Afficher / masquer les icônes",action:()=>desktopIcons&&desktopIcons.classList.toggle("icons-hidden")},
+    {separator:true},
+    {label:"Ouvrir le menu Démarrer",action:()=>$("start-button").click()},
+    {label:"Paramètres",action:()=>openWindow("settings")}
+   ]);
+  }
+ });
+}
+document.querySelectorAll(".desktop-icon").forEach(icon=>{
+ icon.addEventListener("contextmenu",event=>{
+  event.preventDefault();event.stopPropagation();
+  document.querySelectorAll(".desktop-icon.selected").forEach(i=>i.classList.remove("selected"));
+  icon.classList.add("selected");
+  const key=icon.dataset.open;
+  showContextMenu(event.clientX,event.clientY,[
+   {label:"Ouvrir",action:()=>openWindow(key)},
+   {label:"Renommer",action:()=>{
+    const label=icon.querySelector("b"),current=label?label.textContent:(titles[key]||key);
+    const next=window.prompt("Nouveau nom du raccourci :",current);
+    if(next&&next.trim()){const labels=loadDesktopLabels();labels[key]=next.trim().slice(0,32);saveDesktopLabels(labels);applyDesktopLabels();}
+   }},
+   {label:"Propriétés",action:()=>{openWindow(key);focusWindow(key);}},
+   {separator:true},
+   {label:"Annuler",action:()=>{}}
+  ]);
+ });
+});
+document.querySelectorAll(".app-window").forEach(win=>{
+ win.addEventListener("pointerdown",()=>focusWindow(win.dataset.window));
+});
+/* Ajoute le bouton Agrandir/Rétablir à toutes les fenêtres. */
+document.querySelectorAll(".window-titlebar").forEach(bar=>{
+ const key=bar.dataset.drag,controls=bar.querySelector(".window-controls");
+ if(!controls||controls.querySelector('[data-maximize="'+key+'"]'))return;
+ const button=document.createElement("button");
+ button.type="button";button.dataset.maximize=key;button.title="Agrandir / restaurer";button.textContent="□";
+ controls.insertBefore(button,controls.firstChild);
+ bar.addEventListener("dblclick",event=>{
+  if(event.target.closest("button"))return;
+  toggleMaximize(key);
+ });
+});
+function toggleMaximize(key){
+ const win=$("window-"+key);if(!win)return;
+ win.classList.toggle("maximized");
+ if(!win.classList.contains("maximized")){win.style.left="";win.style.top="";win.style.width="";win.style.height="";}
+ focusWindow(key);
+}
+document.querySelectorAll("[data-maximize]").forEach(button=>button.addEventListener("click",()=>toggleMaximize(button.dataset.maximize)));
+/* Menu contextuel de fenêtre et de bouton de barre des tâches. */
+document.querySelectorAll(".window-titlebar").forEach(bar=>bar.addEventListener("contextmenu",event=>{
+ event.preventDefault();const key=bar.dataset.drag;
+ showContextMenu(event.clientX,event.clientY,[
+  {label:"Restaurer / agrandir",action:()=>toggleMaximize(key)},
+  {label:"Réduire",action:()=>{$("window-"+key).classList.remove("open");const t=$("task-"+key);if(t)t.classList.remove("active");}},
+  {label:"Fermer",action:()=>closeWindow(key)}
+ ]);
+}));
+document.querySelectorAll(".task-app").forEach(button=>button.addEventListener("contextmenu",event=>{
+ event.preventDefault();const key=button.dataset.task;
+ showContextMenu(event.clientX,event.clientY,[
+  {label:"Afficher",action:()=>openWindow(key)},
+  {label:"Fermer",action:()=>closeWindow(key)}
+ ]);
+}));
+/* Raccourcis clavier de confort. */
+document.addEventListener("keydown",event=>{
+ if(event.key==="F5"&&document.activeElement===document.body){event.preventDefault();applyDesktopLabels();}
+ if(event.altKey&&event.key==="ArrowDown"){const win=document.querySelector(".app-window.open");if(win){event.preventDefault();win.classList.remove("open");}}
+});
