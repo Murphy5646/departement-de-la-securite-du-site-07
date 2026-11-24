@@ -587,3 +587,206 @@ $("apps-reset").addEventListener("click", () => {
   renderTasks(); renderReports(); renderEvents(); renderMail();
   $("settings-status").textContent = "Les données des applications ont été réinitialisées. Les comptes sont conservés.";
 });
+
+
+/* Vingt applications additionnelles SEC-OS. Stockage local à ce navigateur. */
+const EXTRA_KEYS = {
+ contacts:"site07_contacts_v1", shifts:"site07_shifts_v1", maintenance:"site07_maintenance_v1",
+ requests:"site07_requests_v1", meetings:"site07_meetings_v1", journal:"site07_journal_v1",
+ bulletin:"site07_bulletin_v1", favorites:"site07_favorites_v1", checklist:"site07_checklist_v1"
+};
+function extraData(name){return readAppData(EXTRA_KEYS[name],[]);}
+function extraSave(name,data){return writeAppData(EXTRA_KEYS[name],data);}
+function extraList(id,items,format,onRemove){
+ const root=$(id); if(!root)return; root.replaceChildren();
+ if(!items.length){root.appendChild(makeAppItem("p","muted","Aucun élément enregistré."));return;}
+ items.forEach((item,index)=>{
+  const row=makeAppItem("article","app-list-item","");
+  const main=makeAppItem("span","",format(item));
+  row.appendChild(main);
+  if(onRemove){const btn=makeAppItem("button","secondary","Supprimer");btn.type="button";btn.addEventListener("click",()=>onRemove(index));row.appendChild(btn);}
+  root.appendChild(row);
+ });
+}
+function extraAdd(name,item,render){
+ const data=extraData(name);data.push(item);
+ if(!extraSave(name,data)){alert("Stockage local indisponible ou saturé.");return;}
+ render();
+}
+
+/* Convertisseur d'unités : longueurs, masses et températures. */
+$("cv-run").addEventListener("click",()=>{
+ const value=Number($("cv-value").value),from=$("cv-from").value,to=$("cv-to").value;
+ const groups={m:["m",1],km:["m",1000],cm:["m",.01],kg:["kg",1],g:["kg",.001]};
+ let result;
+ if(!Number.isFinite(value))result="Valeur invalide";
+ else if(from===to)result=value;
+ else if(from==="c"&&to==="f")result=value*9/5+32;
+ else if(from==="f"&&to==="c")result=(value-32)*5/9;
+ else if(groups[from]&&groups[to]&&groups[from][0]===groups[to][0])result=value*groups[from][1]/groups[to][1];
+ else result="Unités incompatibles";
+ $("cv-result").textContent="Résultat : "+(typeof result==="number"?Number(result.toFixed(6))+" "+to:result);
+});
+
+/* Chronomètre. */
+let swElapsed=0,swStarted=0,swInterval=null;
+function swRender(){
+ const total=swElapsed+(swInterval?Date.now()-swStarted:0);
+ const sec=Math.floor(total/1000),h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),s=sec%60;
+ $("sw-display").textContent=[h,m,s].map(v=>String(v).padStart(2,"0")).join(":");
+}
+$("sw-start").addEventListener("click",()=>{if(swInterval)return;swStarted=Date.now();swInterval=window.setInterval(swRender,250);});
+$("sw-pause").addEventListener("click",()=>{if(swInterval){swElapsed+=Date.now()-swStarted;clearInterval(swInterval);swInterval=null;swRender();}});
+$("sw-reset").addEventListener("click",()=>{if(swInterval)clearInterval(swInterval);swInterval=null;swElapsed=0;swRender();});
+
+/* Minuteur et concentration. */
+let tmInterval=null,tmRemaining=300;
+function tmRender(){ $("tm-display").textContent=String(Math.floor(tmRemaining/60)).padStart(2,"0")+":"+String(tmRemaining%60).padStart(2,"0");}
+$("tm-start").addEventListener("click",()=>{
+ if(tmInterval)return;
+ const chosen=Number($("tm-min").value);
+ if(!Number.isInteger(chosen)||chosen<1||chosen>180){$("tm-status").textContent="Choisissez entre 1 et 180 minutes.";return;}
+ tmRemaining=chosen*60;tmRender();$("tm-status").textContent="Compte à rebours en cours.";
+ tmInterval=window.setInterval(()=>{tmRemaining--;tmRender();if(tmRemaining<=0){clearInterval(tmInterval);tmInterval=null;$("tm-status").textContent="Temps écoulé.";alert("Minuteur terminé.");}},1000);
+});
+$("tm-stop").addEventListener("click",()=>{if(tmInterval)clearInterval(tmInterval);tmInterval=null;$("tm-status").textContent="Minuteur arrêté.";});
+$("tm-min").addEventListener("change",()=>{if(!tmInterval){const n=Math.max(1,Math.min(180,Number($("tm-min").value)||5));tmRemaining=n*60;tmRender();}});
+let focusRemaining=1500,focusInterval=null;
+function focusRender(){$("fc-display").textContent=String(Math.floor(focusRemaining/60)).padStart(2,"0")+":"+String(focusRemaining%60).padStart(2,"0");}
+$("fc-start").addEventListener("click",()=>{if(focusInterval)return;focusInterval=window.setInterval(()=>{focusRemaining--;focusRender();if(focusRemaining<=0){clearInterval(focusInterval);focusInterval=null;$("fc-status").textContent="Session terminée. Faites une pause.";alert("Session de concentration terminée.");}},1000);$("fc-status").textContent="Session en cours.";});
+$("fc-pause").addEventListener("click",()=>{if(focusInterval)clearInterval(focusInterval);focusInterval=null;$("fc-status").textContent="Session en pause.";});
+$("fc-reset").addEventListener("click",()=>{if(focusInterval)clearInterval(focusInterval);focusInterval=null;focusRemaining=1500;focusRender();$("fc-status").textContent="Prêt pour une nouvelle session.";});
+
+/* Calcul d'intervalle entre deux dates. */
+$("dc-run").addEventListener("click",()=>{
+ const a=$("dc-a").value,b=$("dc-b").value;
+ if(!a||!b){$("dc-result").textContent="Sélectionnez les deux dates.";return;}
+ const days=Math.round(Math.abs(Date.parse(b+"T12:00:00")-Date.parse(a+"T12:00:00"))/86400000);
+ $("dc-result").textContent=days+" jour(s) d'écart.";
+});
+
+/* Carnet de contacts local. */
+function renderContacts(){extraList("co-list",extraData("contacts"),x=>x.name+" — "+x.role+" · "+x.info,i=>{const d=extraData("contacts");d.splice(i,1);extraSave("contacts",d);renderContacts();});}
+$("co-add").addEventListener("click",()=>{
+ const name=clean($("co-name").value),role=clean($("co-role").value),info=clean($("co-info").value);
+ if(!name||!role){$("co-list").textContent="Indiquez au moins un nom et un service.";return;}
+ extraAdd("contacts",{name,role,info},renderContacts);$("co-name").value="";$("co-role").value="";$("co-info").value="";
+});renderContacts();
+
+/* Planning d'équipe fictif. */
+function renderShifts(){extraList("sh-list",extraData("shifts"),x=>x.date+" · "+x.slot+" · "+x.name,i=>{const d=extraData("shifts");d.splice(i,1);extraSave("shifts",d);renderShifts();});}
+$("sh-add").addEventListener("click",()=>{
+ const name=clean($("sh-name").value),date=$("sh-date").value;
+ if(!name||!date){$("sh-list").textContent="Indiquez une équipe et une date.";return;}
+ extraAdd("shifts",{name,date,slot:$("sh-slot").value},renderShifts);$("sh-name").value="";
+});renderShifts();
+
+/* Tickets de maintenance de démonstration. */
+function renderMaintenance(){extraList("ma-list",extraData("maintenance"),x=>x.title+" · "+x.priority+" — "+x.detail,i=>{const d=extraData("maintenance");d.splice(i,1);extraSave("maintenance",d);renderMaintenance();});}
+$("ma-add").addEventListener("click",()=>{
+ const title=clean($("ma-title").value),detail=clean($("ma-detail").value);
+ if(!title){$("ma-list").textContent="Indiquez l'objet de la demande.";return;}
+ extraAdd("maintenance",{title,detail,priority:$("ma-priority").value},renderMaintenance);$("ma-title").value="";$("ma-detail").value="";
+});renderMaintenance();
+
+/* Check-list interactive et persistante. */
+const checklistItems=["Vérifier les informations du dossier RP","Consulter les annonces du service","Mettre à jour le journal de service","Préparer les documents nécessaires","Transmettre les notes à l'équipe"];
+function renderChecklist(){
+ const root=$("cl-list"),done=readAppData(EXTRA_KEYS.checklist,[]);root.replaceChildren();
+ checklistItems.forEach((label,index)=>{
+  const line=makeAppItem("label","app-list-item","");
+  const box=document.createElement("input");box.type="checkbox";box.checked=done.includes(index);
+  box.addEventListener("change",()=>{let next=readAppData(EXTRA_KEYS.checklist,[]);next=box.checked?[...next,index]:next.filter(v=>v!==index);writeAppData(EXTRA_KEYS.checklist,next);renderChecklist();});
+  line.append(box,makeAppItem("span","",label));root.appendChild(line);
+ });
+ $("cl-progress").textContent=done.length+" / "+checklistItems.length+" étapes terminées.";
+}
+$("cl-reset").addEventListener("click",()=>{writeAppData(EXTRA_KEYS.checklist,[]);renderChecklist();});renderChecklist();
+
+/* Quiz pédagogique à choix multiples. */
+const quiz=[
+ {q:"Quel est le rôle principal d'un registre documentaire ?",o:["Décorer le bureau","Classer et retrouver les documents","Remplacer les communications"],a:1},
+ {q:"Que doit contenir un compte rendu utile ?",o:["Une date et des faits clairs","Uniquement des suppositions","Des informations sans rapport"],a:0},
+ {q:"Où conserver les notes personnelles dans SEC-OS ?",o:["Dans un message public","Dans le bloc-notes local","Nulle part"],a:1},
+ {q:"À quoi sert une check-list ?",o:["Oublier des étapes","Suivre une suite de vérifications","Remplacer une formation"],a:1}
+];
+let quizIndex=0,quizScore=0,quizAnswered=0;
+function renderQuiz(){
+ const q=quiz[quizIndex];$("tr-question").textContent=q.q;$("tr-options").replaceChildren();
+ q.o.forEach((label,index)=>{const btn=makeAppItem("button","secondary",label);btn.type="button";btn.addEventListener("click",()=>{
+  if(btn.disabled)return;Array.from($("tr-options").children).forEach(b=>b.disabled=true);
+  const good=index===q.a;if(good)quizScore++;quizAnswered++;
+  $("tr-feedback").textContent=good?"Bonne réponse !":"Pas tout à fait. Réponse attendue : "+q.o[q.a];
+  $("tr-score").textContent="Score : "+quizScore+" / "+quizAnswered;
+ });$("tr-options").appendChild(btn);});
+ $("tr-feedback").textContent="Choisissez une réponse.";
+}
+$("tr-next").addEventListener("click",()=>{quizIndex=(quizIndex+1)%quiz.length;renderQuiz();});renderQuiz();
+
+/* Glossaire fictif et général. */
+const glossary=[
+ ["Anomalie","Élément fictif présentant des propriétés inhabituelles dans l'univers SCP."],
+ ["Classement","Catégorie fictive décrivant les modalités de confinement d'un objet."],
+ ["Confinement","Mesures fictives visant à maintenir une anomalie dans un cadre défini."],
+ ["Dossier","Ensemble organisé de documents relatifs à un sujet."],
+ ["Incident RP","Événement narratif consigné dans le cadre du jeu de rôle."],
+ ["Site","Installation fictive de la Fondation dans l'univers SCP."],
+ ["Unité Marshal","Service fictif de sécurité du Site-07 dans ce projet."]
+];
+function renderGlossary(query=""){
+ const root=$("gl-list");root.replaceChildren();
+ glossary.filter(x=>(x[0]+" "+x[1]).toLocaleLowerCase("fr").includes(query)).forEach(x=>{const card=makeAppItem("article","app-list-item","");card.append(makeAppItem("b","",x[0]),makeAppItem("p","",x[1]));root.appendChild(card);});
+}
+$("gl-search").addEventListener("input",()=>renderGlossary($("gl-search").value.toLocaleLowerCase("fr")));renderGlossary();
+
+/* Plan schématique non opérationnel. */
+document.querySelectorAll("[data-zone]").forEach(btn=>btn.addEventListener("click",()=>{$("mp-detail").textContent="Zone sélectionnée : "+btn.dataset.zone+". Description fictive du Site-07."; }));
+
+/* Demandes internes. */
+function renderRequests(){extraList("rq-list",extraData("requests"),x=>x.title+" · "+x.type+" — "+x.detail,i=>{const d=extraData("requests");d.splice(i,1);extraSave("requests",d);renderRequests();});}
+$("rq-add").addEventListener("click",()=>{const title=clean($("rq-title").value),detail=clean($("rq-detail").value);if(!title){$("rq-list").textContent="Indiquez un objet.";return;}extraAdd("requests",{title,detail,type:$("rq-type").value},renderRequests);$("rq-title").value="";$("rq-detail").value="";});renderRequests();
+
+/* Réunions. */
+function renderMeetings(){extraList("mt-list",extraData("meetings"),x=>x.date+" · "+x.title+" — "+x.notes,i=>{const d=extraData("meetings");d.splice(i,1);extraSave("meetings",d);renderMeetings();});}
+$("mt-add").addEventListener("click",()=>{const title=clean($("mt-title").value);if(!title){$("mt-list").textContent="Indiquez un sujet.";return;}extraAdd("meetings",{title,date:$("mt-date").value||"Date à définir",notes:clean($("mt-notes").value)},renderMeetings);$("mt-title").value="";$("mt-notes").value="";});renderMeetings();
+
+/* Journal de service. */
+function renderJournal(){extraList("jn-list",extraData("journal"),x=>x.date+" — "+x.text,i=>{const d=extraData("journal");d.splice(i,1);extraSave("journal",d);renderJournal();});}
+$("jn-add").addEventListener("click",()=>{const textValue=clean($("jn-text").value);if(!textValue)return;extraAdd("journal",{date:new Date().toLocaleString("fr-FR"),text:textValue},renderJournal);$("jn-text").value="";});renderJournal();
+
+/* Modèles de documents et copie. */
+$("tp-generate").addEventListener("click",()=>{
+ const kind=$("tp-kind").value,subject=clean($("tp-subject").value)||"À compléter";
+ $("tp-output").value=kind+"\nSITE-07 — DOCUMENT DE JEU DE RÔLE\nObjet : "+subject+"\nDate : "+new Date().toLocaleDateString("fr-FR")+"\n\nContexte :\n[À compléter]\n\nFaits / éléments :\n[À compléter]\n\nActions / décisions :\n[À compléter]\n\nRédigé par : [Pseudonyme]\nValidation : [À compléter]";
+});
+$("tp-copy").addEventListener("click",async()=>{try{await navigator.clipboard.writeText($("tp-output").value);$("tp-status").textContent="Texte copié."; }catch{$("tp-output").select();$("tp-status").textContent="Sélectionnez le texte pour le copier.";}});
+
+/* Compteur de texte. */
+$("wc-text").addEventListener("input",()=>{
+ const value=$("wc-text").value;
+ $("wc-words").textContent=(value.trim().match(/\S+/g)||[]).length;
+ $("wc-chars").textContent=value.length;
+ $("wc-lines").textContent=value?value.split(/\r\n|\r|\n/).length:0;
+});
+
+/* Panneau d'annonces local. */
+function renderBulletin(){extraList("bu-list",extraData("bulletin"),x=>x.date+" · "+x.title+" — "+x.body,i=>{const d=extraData("bulletin");d.splice(i,1);extraSave("bulletin",d);renderBulletin();});}
+$("bu-add").addEventListener("click",()=>{const title=clean($("bu-title").value),body=clean($("bu-body").value);if(!title||!body){$("bu-list").textContent="Ajoutez un titre et un texte.";return;}extraAdd("bulletin",{title,body,date:new Date().toLocaleString("fr-FR")},renderBulletin);$("bu-title").value="";$("bu-body").value="";});renderBulletin();
+
+/* Favoris textuels. */
+function renderFavorites(){extraList("fv-list",extraData("favorites"),x=>x.name+" — "+x.note,i=>{const d=extraData("favorites");d.splice(i,1);extraSave("favorites",d);renderFavorites();});}
+$("fv-add").addEventListener("click",()=>{const name=clean($("fv-name").value);if(!name)return;extraAdd("favorites",{name,note:clean($("fv-note").value)},renderFavorites);$("fv-name").value="";$("fv-note").value="";});renderFavorites();
+
+/* Statistiques locales agrégées. */
+function renderExtraStats(){
+ const root=$("st-list");root.replaceChildren();
+ const counts=[
+ ["Contacts",extraData("contacts").length],["Équipes planifiées",extraData("shifts").length],
+ ["Tickets maintenance",extraData("maintenance").length],["Demandes",extraData("requests").length],
+ ["Réunions",extraData("meetings").length],["Entrées du journal",extraData("journal").length],
+ ["Annonces",extraData("bulletin").length],["Favoris",extraData("favorites").length],
+ ["Tâches",readAppData(APP_KEYS.tasks,[]).length],["Rapports RP",readAppData(APP_KEYS.reports,[]).length]
+ ];
+ counts.forEach(([label,count])=>{const card=makeAppItem("div","notice","");card.append(makeAppItem("small","",label),makeAppItem("b","",String(count)));root.appendChild(card);});
+}
+$("st-refresh").addEventListener("click",renderExtraStats);renderExtraStats();
