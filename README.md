@@ -19,7 +19,7 @@ python -m http.server 8000
 Puis ouvrir http://localhost:8000.
 
 ## Protocoles Marshal
-La rubrique est prête à recevoir le texte complet du Code Marshal. Le document source doit être fourni pour intégrer fidèlement les articles. Aucun article manquant n'est inventé.
+La rubrique contient le Code officiel des protocoles et règlements de l'Unité Marshal, version 1.2, avec 165 articles, un index et une recherche intégrée. Le contenu est présenté dans le cadre du jeu de rôle et ne constitue pas un règlement réel.
 
 ## Publication
 Dans GitHub : Settings → Pages → Deploy from a branch → `main` → `/ (root)`.
