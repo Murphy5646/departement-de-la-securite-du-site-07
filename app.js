@@ -18,7 +18,8 @@ const titles = {
   archives: "Archives & directives",
   notes: "Bloc-notes", calculator: "Calculatrice", calendar: "Calendrier",
   tasks: "Gestionnaire de tâches", reports: "Rapports RP", inventory: "Inventaire",
-  mail: "Messagerie interne", settings: "Paramètres"
+  mail: "Messagerie interne", settings: "Paramètres",
+  converter: "Convertisseur", stopwatch: "Chronomètre", timer: "Minuteur", datecalc: "Calcul de dates", contacts: "Contacts", shifts: "Planning des équipes", maintenance: "Maintenance", checklists: "Check-lists", training: "Formation", glossary: "Glossaire SCP", map: "Plan du Site-07", requests: "Demandes internes", meetings: "Réunions", journal: "Journal de service", templates: "Modèles de documents", wordcount: "Compteur de texte", bulletin: "Panneau d’annonces", favorites: "Favoris", focus: "Mode concentration", stats: "Statistiques"
 };
 
 function readUsers() {
